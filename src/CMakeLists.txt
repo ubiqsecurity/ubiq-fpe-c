@@ -1,4 +1,5 @@
 add_subdirectory(lib)
+add_subdirectory(test)
 
 function(strip_target TARGET)
   set(CMAKE_STRIP_COMMAND /usr/bin/strip)
