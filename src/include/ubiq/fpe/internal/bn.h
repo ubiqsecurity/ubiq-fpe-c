@@ -58,6 +58,12 @@ int bigint_get_str(char * const str, const size_t len,
     return res;
 }
 
+static inline
+void * bigint_export(const bigint_t * const x, size_t * const count)
+{
+    return mpz_export(NULL, count, 1, 1, 1, 0, *x);
+}
+
 __END_DECLS
 
 #endif
