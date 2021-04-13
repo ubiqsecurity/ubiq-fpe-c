@@ -1,0 +1,36 @@
+image:
+    name: debian:stable
+
+variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - build
+
+stages:
+    - build
+    - test
+    - deploy
+
+build:
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    stage: build
+    before_script:
+        - apt -y update
+        - apt -y install cmake gcc g++
+        - apt -y install libgmp-dev libssl-dev
+    script:
+        - cmake -S. -Bbuild
+        - cmake --build build --target all -j$(nproc)
+
+test:
+    stage: test
+    before_script:
+        - apt -y update
+        - apt -y install libgmp10 libssl1.1
+    script:
+        - cmake --build build --target test -j$(nproc)
