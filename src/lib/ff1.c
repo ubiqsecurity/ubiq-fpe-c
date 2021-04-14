@@ -21,6 +21,8 @@ void * memxor(void * d,
 
         len--;
     }
+
+    return d;
 }
 
 static
@@ -53,6 +55,8 @@ int ff1_prf(uint8_t * const dst,
         }
         EVP_EncryptFinal_ex(ctx, dst, &dstl);
         EVP_CIPHER_CTX_free(ctx);
+
+        res = 0;
     }
 
     return res;
@@ -63,7 +67,7 @@ int ff1_ciph(uint8_t * const dst,
              const uint8_t * const K, const size_t k,
              const uint8_t * const src)
 {
-    ff1_prf(dst, K, k, src, 16);
+    return ff1_prf(dst, K, k, src, 16);
 }
 
 int ff1_encrypt(char * const Y,
@@ -179,10 +183,11 @@ int ff1_encrypt(char * const Y,
     strcpy(Y, A);
     strcat(Y, B);
 
-bailout:
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);
 
     bigint_deinit(&c);
     bigint_deinit(&y);
+
+    return 0;
 }
