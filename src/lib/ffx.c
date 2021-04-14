@@ -2,17 +2,22 @@
 
 #include <openssl/evp.h>
 
-uint8_t * ffx_revb(uint8_t * const str, const size_t len)
+uint8_t * ffx_revb(uint8_t * const dst,
+                   const uint8_t * const src, const size_t len)
 {
     size_t i;
 
     for (i = 0; i < len / 2; i++) {
-        const uint8_t t = str[i];
-        str[i] = str[(len - 1) - i];
-        str[(len - 1)- i] = t;
+        const uint8_t t = src[i];
+        dst[i] = src[(len - 1) - i];
+        dst[(len - 1)- i] = t;
     }
 
-    return str;
+    if (len % 2) {
+        dst[i] = src[i];
+    }
+
+    return dst;
 }
 
 int ffx_str(char * const str, const size_t len,

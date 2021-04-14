@@ -6,11 +6,19 @@
 TEST(ffx, revs)
 {
     char s[] = "abcde";
-    ASSERT_EQ(s, ffx_revs(s));
+    char d[sizeof(s)];
+
+    ASSERT_EQ(d, ffx_revs(d, s));
+    EXPECT_EQ(strcmp(d, "edcba"), 0);
+
+    ASSERT_EQ(s, ffx_revs(s, s));
     EXPECT_EQ(strcmp(s, "edcba"), 0);
 
     s[strlen(s) - 1] = '\0';
-    ASSERT_EQ(s, ffx_revs(s));
+    ASSERT_EQ(d, ffx_revs(d, s));
+    EXPECT_EQ(strcmp(d, "bcde"), 0);
+
+    ASSERT_EQ(s, ffx_revs(s, s));
     EXPECT_EQ(strcmp(s, "bcde"), 0);
 }
 

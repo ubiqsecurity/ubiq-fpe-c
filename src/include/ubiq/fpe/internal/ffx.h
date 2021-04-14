@@ -11,11 +11,16 @@
 
 __BEGIN_DECLS
 
-uint8_t * ffx_revb(uint8_t * const str, const size_t len);
+uint8_t * ffx_revb(uint8_t * const dst,
+                   const uint8_t * const src, const size_t len);
 static inline
-char * ffx_revs(char * const str)
+char * ffx_revs(char * const dst, const char * const src)
 {
-    return (char *)ffx_revb((uint8_t *)str, strlen(str));
+    const size_t len = strlen(src);
+    char * const res =
+        (char *)ffx_revb((uint8_t *)dst, (const uint8_t *)src, len);
+    dst[len] = '\0';
+    return res;
 }
 
 int ffx_str(char * const str, const size_t len,
