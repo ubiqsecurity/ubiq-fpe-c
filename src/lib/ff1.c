@@ -139,8 +139,11 @@ int ff1_cipher(char * const Y,
     *(uint32_t *)&P[8]  = htonl(n);
     *(uint32_t *)&P[12] = htonl(t);
 
+    memcpy(Q, T, t);
+    memset(Q + t, 0, z);
+
     for (unsigned int i = 0; i < 10; i++) {
-        const unsigned int m = ((i + encrypt) % 2) ? u : v;
+        const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
 
         uint8_t * numb;
         size_t numc;
@@ -148,8 +151,6 @@ int ff1_cipher(char * const Y,
         bigint_set_str(&c, B, radix);
         numb = bigint_export(&c, &numc);
 
-        memcpy(Q, T, t);
-        memset(Q + t, 0, z);
         Q[t + z] = encrypt ? i : (9 - i);
         if (b <= numc) {
             memcpy(&Q[t + z + 1], numb, b);
@@ -163,12 +164,14 @@ int ff1_cipher(char * const Y,
         ff1_prf(R, K, k, P, p + q);
 
         for (unsigned int j = 1; j < (d + 15) / 16; j++) {
-            memset(&R[16 * j], 0, 16 - sizeof(j));
-            *(unsigned int *)&R[16 * j + 16 - sizeof(j)] = htonl(j);
+            const unsigned int l = j * 16;
 
-            memxor(&R[16 * j], &R[0], &R[16 * j], 16);
+            memset(&R[l], 0, 16 - sizeof(j));
+            *(unsigned int *)&R[16 + l - sizeof(j)] = htonl(j);
 
-            ff1_ciph(&R[16 * j], K, k, &R[16 * j]);
+            memxor(&R[l], &R[0], &R[l], 16);
+
+            ff1_ciph(&R[l], K, k, &R[l]);
         }
 
         bigint_import(&y, R, d);
