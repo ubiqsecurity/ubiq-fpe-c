@@ -1,6 +1,27 @@
 #include <gtest/gtest.h>
 #include <ubiq/fpe/ff1.h>
 
+static
+void ff1_test(const uint8_t * const K, const size_t k,
+              const uint8_t * const T, const size_t t,
+              const char * const PT, const char * const CT,
+              const unsigned int radix)
+{
+    char * out;
+
+    ASSERT_EQ(strlen(PT), strlen(CT));
+    out = (char *)calloc(strlen(PT) + 1, 1);
+    ASSERT_NE(out, nullptr);
+
+    EXPECT_EQ(ff1_encrypt(out, K, k, T, t, PT, radix), 0);
+    EXPECT_EQ(strcmp(out, CT), 0);
+
+    EXPECT_EQ(ff1_decrypt(out, K, k, T, t, CT, radix), 0);
+    EXPECT_EQ(strcmp(out, PT), 0);
+
+    free(out);
+}
+
 TEST(ff1, sample1)
 {
     const uint8_t K[] = {
@@ -10,19 +31,10 @@ TEST(ff1, sample1)
 
     const uint8_t T[] = {};
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "2433477484";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "2433477484"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample2)
@@ -36,19 +48,10 @@ TEST(ff1, sample2)
         0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30,
     };
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "6124200773";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "6124200773"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample3)
@@ -62,19 +65,10 @@ TEST(ff1, sample3)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37,
     };
 
-    char PT[] = "0123456789abcdefghi";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789abcdefghi";
+    const char CT[] = "a9tv40mll9kdu509eum";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "a9tv40mll9kdu509eum"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789abcdefghi"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
 }
 
 TEST(ff1, sample4)
@@ -87,19 +81,10 @@ TEST(ff1, sample4)
 
     const uint8_t T[] = {};
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "2830668132";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), NULL, 0, PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "2830668132"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample5)
@@ -114,19 +99,10 @@ TEST(ff1, sample5)
         0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30,
     };
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "2496655549";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "2496655549"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample6)
@@ -141,19 +117,10 @@ TEST(ff1, sample6)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37,
     };
 
-    char PT[] = "0123456789abcdefghi";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789abcdefghi";
+    const char CT[] = "xbj3kv35jrawxv32ysr";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "xbj3kv35jrawxv32ysr"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789abcdefghi"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
 }
 
 TEST(ff1, sample7)
@@ -167,19 +134,10 @@ TEST(ff1, sample7)
 
     const uint8_t T[] = {};
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "6657667009";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), NULL, 0, PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "6657667009"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample8)
@@ -195,19 +153,10 @@ TEST(ff1, sample8)
         0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30,
     };
 
-    char PT[] = "0123456789";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789";
+    const char CT[] = "1001623463";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "1001623463"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 10);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
 TEST(ff1, sample9)
@@ -223,17 +172,8 @@ TEST(ff1, sample9)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72, 0x73, 0x37, 0x37, 0x37,
     };
 
-    char PT[] = "0123456789abcdefghi";
-    char CT[sizeof(PT)];
+    const char PT[] = "0123456789abcdefghi";
+    const char CT[] = "xs8a0azh2avyalyzuwd";
 
-    int res;
-
-    res = ff1_encrypt(CT, K, sizeof(K), T, sizeof(T), PT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(CT, "xs8a0azh2avyalyzuwd"), 0);
-
-    memset(PT, '0', sizeof(PT) - 1);
-    res = ff1_decrypt(PT, K, sizeof(K), T, sizeof(T), CT, 36);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(strcmp(PT, "0123456789abcdefghi"), 0);
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
 }
