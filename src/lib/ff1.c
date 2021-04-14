@@ -1,74 +1,9 @@
+#include <ubiq/fpe/ff1.h>
 #include <ubiq/fpe/internal/ffx.h>
 
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <math.h>
-
-#include <openssl/evp.h>
-
-static
-void * memxor(void * d,
-              const void * s1, const void * s2,
-              size_t len)
-{
-    while (len) {
-        *(uint8_t *)d = *(uint8_t *)s1 ^ *(uint8_t *)s2;
-
-        d = (uint8_t *)d + 1;
-
-        s1 = (uint8_t *)s1 + 1;
-        s2 = (uint8_t *)s2 + 1;
-
-        len--;
-    }
-
-    return d;
-}
-
-static
-int ff1_prf(uint8_t * const dst,
-            const uint8_t * const K, const size_t k,
-            const uint8_t * const src, const size_t len)
-{
-    const EVP_CIPHER * ciph;
-
-    int res;
-
-    res = -EINVAL;
-    switch (k) {
-    case 16: ciph = EVP_aes_128_cbc(); break;
-    case 24: ciph = EVP_aes_192_cbc(); break;
-    case 32: ciph = EVP_aes_256_cbc(); break;
-    default: ciph = NULL;              break;
-    }
-
-    if (ciph) {
-        static const uint8_t IV[16] = { 0 };
-
-        EVP_CIPHER_CTX * const ctx = EVP_CIPHER_CTX_new();
-        int dstl;
-
-        EVP_EncryptInit_ex(ctx, ciph, NULL, K, IV);
-        EVP_CIPHER_CTX_set_padding(ctx, 0);
-        for (unsigned int i = 0; i < len / 16; i++) {
-            EVP_EncryptUpdate(ctx, dst, &dstl, src + 16 * i, 16);
-        }
-        EVP_EncryptFinal_ex(ctx, dst, &dstl);
-        EVP_CIPHER_CTX_free(ctx);
-
-        res = 0;
-    }
-
-    return res;
-}
-
-static
-int ff1_ciph(uint8_t * const dst,
-             const uint8_t * const K, const size_t k,
-             const uint8_t * const src)
-{
-    return ff1_prf(dst, K, k, src, 16);
-}
 
 static
 int ff1_cipher(char * const Y,
@@ -161,7 +96,7 @@ int ff1_cipher(char * const Y,
 
         free(numb);
 
-        ff1_prf(R, K, k, P, p + q);
+        ffx_prf(R, K, k, P, p + q);
 
         for (unsigned int j = 1; j < (d + 15) / 16; j++) {
             const unsigned int l = j * 16;
@@ -169,9 +104,9 @@ int ff1_cipher(char * const Y,
             memset(&R[l], 0, 16 - sizeof(j));
             *(unsigned int *)&R[16 + l - sizeof(j)] = htonl(j);
 
-            memxor(&R[l], &R[0], &R[l], 16);
+            ffx_memxor(&R[l], &R[0], &R[l], 16);
 
-            ff1_ciph(&R[l], K, k, &R[l]);
+            ffx_ciph(&R[l], K, k, &R[l]);
         }
 
         bigint_import(&y, R, d);

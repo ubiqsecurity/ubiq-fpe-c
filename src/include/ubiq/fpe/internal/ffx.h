@@ -21,6 +21,18 @@ char * ffx_revs(char * const str)
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r, const bigint_t * n);
 
+void * ffx_memxor(void * d,
+                  const void * s1, const void * s2,
+                  size_t len);
+
+int ffx_prf(uint8_t * const dst,
+            const uint8_t * const K, const size_t k,
+            const uint8_t * const src, const size_t len);
+
+int ffx_ciph(uint8_t * const dst,
+             const uint8_t * const K, const size_t k,
+             const uint8_t * const src);
+
 __END_DECLS
 
 #endif
