@@ -64,6 +64,13 @@ void * bigint_export(const bigint_t * const x, size_t * const count)
     return mpz_export(NULL, count, 1, 1, 1, 0, *x);
 }
 
+static inline
+void bigint_import(bigint_t * const x,
+                   const void * const buf, const size_t len)
+{
+    mpz_import(*x, len, 1, 1, 1, 0, buf);
+}
+
 __END_DECLS
 
 #endif

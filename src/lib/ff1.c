@@ -76,6 +76,10 @@ int ff1_encrypt(char * const Y,
         return -ENOMEM;
     }
 
+    /*
+     * TODO: maybe P, Q, and R should be at the
+     * front so that they can be 16-byte aligned
+     */
     A = scratch.buf;
     B = A + v + 1;
     C = B + v + 1;
@@ -98,11 +102,11 @@ int ff1_encrypt(char * const Y,
     *(uint32_t *)&P[12] = htonl(t);
 
     for (unsigned int i = 0; i < 10; i++) {
-        void * numb;
+        uint8_t * numb;
         size_t numc;
 
-        ffx_numr(&num, A, radix);
-        numb = bigint_export(&num, &numc);
+        numb = NULL; numc = 0;
+        ffx_nums(&numb, &numc, A, radix);
 
         memcpy(Q, T, t);
         memset(Q + t, 0, z);
@@ -113,6 +117,8 @@ int ff1_encrypt(char * const Y,
             memset(&Q[t + z + 1], 0, b - numc);
             memcpy(&Q[t + z + 1 + (b - numc)], numb, numc);
         }
+
+        free(numb);
 
         ff1_prf(R, K, k, P, p + q);
 

@@ -16,17 +16,18 @@ TEST(ffx, revs)
 
 TEST(ffx, numr)
 {
-    char n2[] = "10000000";
     char n5[] = "00011010";
 
+    uint8_t * numb;
+    size_t numc;
     bigint_t n;
 
     bigint_init(&n);
 
-    EXPECT_EQ(ffx_num2(&n, n2), 0);
-    EXPECT_EQ(bigint_cmp_si(&n, 128), 0);
+    numb = NULL; numc = 0;
+    EXPECT_EQ(ffx_nums(&numb, &numc, n5, 5), 0);
 
-    EXPECT_EQ(ffx_numr(&n, n5, 5), 0);
+    bigint_import(&n, numb, numc);
     EXPECT_EQ(bigint_cmp_si(&n, 755), 0);
 
     bigint_deinit(&n);

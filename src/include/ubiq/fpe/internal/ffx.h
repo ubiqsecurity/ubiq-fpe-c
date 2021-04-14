@@ -19,16 +19,20 @@ char * ffx_revs(char * const str)
 }
 
 static inline
-int ffx_numr(bigint_t * const n,
+int ffx_nums(uint8_t ** const n, size_t * const nb,
              const char * const str, const unsigned int radix)
 {
-    return bigint_set_str(n, str, radix);
+    bigint_t x;
+    int res;
+    bigint_init(&x);
+    res = bigint_set_str(&x, str, radix);
+    if (res == 0) {
+        *n = (uint8_t *)bigint_export(&x, nb);
+    }
+    bigint_deinit(&x);
+    return res;
 }
-static inline
-int ffx_num2(bigint_t * const n, const char * const str)
-{
-    return ffx_numr(n, str, 2);
-}
+
 
 int ffx_str(char * const str, const unsigned int m, const unsigned int r,
             const bigint_t * n);
