@@ -1,5 +1,5 @@
-#ifndef UBIQFPE_INTERNAL_BN_H
-#define UBIQFPE_INTERNAL_BN_H
+#ifndef UBIQ_FPE_INTERNAL_BN_H
+#define UBIQ_FPE_INTERNAL_BN_H
 
 #include <sys/cdefs.h>
 #include <errno.h>
@@ -23,15 +23,9 @@ void bigint_deinit(bigint_t * const x)
 }
 
 static inline
-int bigint_cmp(const bigint_t * const x, const bigint_t * const y)
+void bigint_set_ui(bigint_t * const x, const unsigned int n)
 {
-    return mpz_cmp(*x, *y);
-}
-
-static inline
-int bigint_cmp_si(const bigint_t * const x, const int y)
-{
-    return mpz_cmp_si(*x, y);
+    mpz_set_ui(*x, n);
 }
 
 static inline
@@ -69,6 +63,46 @@ void bigint_import(bigint_t * const x,
                    const void * const buf, const size_t len)
 {
     mpz_import(*x, len, 1, 1, 1, 0, buf);
+}
+
+static inline
+int bigint_cmp(const bigint_t * const x, const bigint_t * const y)
+{
+    return mpz_cmp(*x, *y);
+}
+
+static inline
+int bigint_cmp_si(const bigint_t * const x, const int y)
+{
+    return mpz_cmp_si(*x, y);
+}
+
+static inline
+void bigint_add(bigint_t * const res,
+                const bigint_t * const top, const bigint_t * const btm)
+{
+    mpz_add(*res, *top, *btm);
+}
+
+static inline
+void bigint_sub(bigint_t * const res,
+                const bigint_t * const top, const bigint_t * const btm)
+{
+    mpz_sub(*res, *top, *btm);
+}
+
+static inline
+void bigint_pow_ui(bigint_t * const res,
+                   const bigint_t * const base, const unsigned int exp)
+{
+    mpz_pow_ui(*res, *base, exp);
+}
+
+static inline
+void bigint_mod(bigint_t * const res,
+                const bigint_t * const num, const bigint_t * const den)
+{
+    mpz_mod(*res, *num, *den);
 }
 
 __END_DECLS

@@ -5,10 +5,12 @@ add_subdirectory(googletest)
 add_executable(
   unittests
 
+  bn.cpp
+  ff1.cpp
   ffx.cpp)
 target_link_libraries(
   unittests
-  ubiqfpe gtest gtest_main)
+  gtest gtest_main ubiqfpe)
 
 add_custom_target(
   test
