@@ -7,14 +7,21 @@
 
 __BEGIN_DECLS
 
-int ff3_1_encrypt(char * const Y,
-                  const uint8_t * const K, const size_t k,
-                  const uint8_t * const T,
-                  const char * const X, const unsigned int radix);
-int ff3_1_decrypt(char * const Y,
-                  const uint8_t * const K, const size_t k,
-                  const uint8_t * const T,
-                  const char * const X, const unsigned int radix);
+struct ff3_1_ctx;
+
+int ff3_1_ctx_create(struct ff3_1_ctx ** const ctx,
+                     const uint8_t * const keybuf, const size_t keylen,
+                     const uint8_t * const twkbuf,
+                     const unsigned int radix);
+
+int ff3_1_encrypt(struct ff3_1_ctx * const ctx,
+                  char * const Y,
+                  const char * const X, const uint8_t * const T);
+int ff3_1_decrypt(struct ff3_1_ctx * const ctx,
+                  char * const Y,
+                  const char * const X, const uint8_t * const T);
+
+void ff3_1_ctx_destroy(struct ff3_1_ctx * const ctx);
 
 __END_DECLS
 

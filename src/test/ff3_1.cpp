@@ -7,17 +7,25 @@ void ff3_1_test(const uint8_t * const K, const size_t k,
                 const char * const PT, const char * const CT,
                 const unsigned int radix)
 {
+    struct ff3_1_ctx * ctx;
     char * out;
+    int res;
 
     ASSERT_EQ(strlen(PT), strlen(CT));
     out = (char *)calloc(strlen(PT) + 1, 1);
     ASSERT_NE(out, nullptr);
 
-    EXPECT_EQ(ff3_1_encrypt(out, K, k, T, PT, radix), 0);
-    EXPECT_EQ(strcmp(out, CT), 0);
+    res = ff3_1_ctx_create(&ctx, K, k, T, radix);
+    EXPECT_EQ(res, 0);
+    if (res == 0) {
+        EXPECT_EQ(ff3_1_encrypt(ctx, out, PT, NULL), 0);
+        EXPECT_EQ(strcmp(out, CT), 0);
 
-    EXPECT_EQ(ff3_1_decrypt(out, K, k, T, CT, radix), 0);
-    EXPECT_EQ(strcmp(out, PT), 0);
+        EXPECT_EQ(ff3_1_decrypt(ctx, out, CT, NULL), 0);
+        EXPECT_EQ(strcmp(out, PT), 0);
+
+        ff3_1_ctx_destroy(ctx);
+    }
 
     free(out);
 }

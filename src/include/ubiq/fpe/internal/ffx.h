@@ -9,6 +9,8 @@
 
 #include <ubiq/fpe/internal/bn.h>
 
+#include <openssl/evp.h>
+
 __BEGIN_DECLS
 
 uint8_t * ffx_revb(uint8_t * const dst,
@@ -30,13 +32,34 @@ void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len);
 
-int ffx_prf(uint8_t * const dst,
-            const uint8_t * const K, const size_t k,
-            const uint8_t * const src, const size_t len);
+struct ffx_ctx
+{
+    const EVP_CIPHER * ciph;
+    EVP_CIPHER_CTX * evp;
 
-int ffx_ciph(uint8_t * const dst,
-             const uint8_t * const K, const size_t k,
-             const uint8_t * const src);
+    unsigned int radix;
+    struct {
+        size_t min, max;
+    } txtlen, twklen;
+    struct {
+        uint8_t * buf;
+        size_t len;
+    } key, twk;
+};
+
+int ffx_prf(struct ffx_ctx * const ctx,
+            uint8_t * const dst, const uint8_t * const src, const size_t len);
+int ffx_ciph(struct ffx_ctx * const ctx,
+             uint8_t * const dst, const uint8_t * const src);
+
+int ffx_ctx_create(void ** const _ctx,
+                   const size_t len, const size_t off,
+                   const uint8_t * const keybuf, const size_t keylen,
+                   const uint8_t * const twkbuf, const size_t twklen,
+                   const size_t maxtxtlen,
+                   const size_t mintwklen, const size_t maxtwklen,
+                   const unsigned int radix);
+void ffx_ctx_destroy(void * const ctx, const size_t off);
 
 __END_DECLS
 
