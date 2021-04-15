@@ -19,6 +19,7 @@ void bigint_init(bigint_t * const x)
 static inline
 void bigint_deinit(bigint_t * const x)
 {
+    mpz_set_ui(*x, 0);
     mpz_clear(*x);
 }
 
