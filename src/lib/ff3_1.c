@@ -19,9 +19,10 @@ int ff3_1_cipher(char * const Y,
         size_t len;
     } scratch;
 
+    uint8_t P[16];
+    uint8_t Tl[4], Tr[4];
+
     char * A, * B, * C;
-    uint8_t * P;
-    uint8_t * Tl, * Tr;
     uint8_t * rK;
 
     bigint_t y, c;
@@ -29,7 +30,7 @@ int ff3_1_cipher(char * const Y,
     bigint_init(&y);
     bigint_init(&c);
 
-    scratch.len = 3 * (u + 2) + 2 * 4 + k + 16;
+    scratch.len = k + 3 * (u + 2);
     scratch.buf = malloc(scratch.len);
     if (!scratch.buf) {
         bigint_deinit(&c);
@@ -37,16 +38,11 @@ int ff3_1_cipher(char * const Y,
         return -ENOMEM;
     }
 
-    A = scratch.buf;
+    rK = scratch.buf;
+
+    A = rK + k;
     B = A + u + 2;
     C = B + u + 2;
-
-    Tl = (uint8_t *)C + u + 2;
-    Tr = Tl + 4;
-
-    rK = Tr + 4;
-
-    P = rK + k;
 
     /* Step 2 */
     if (encrypt) {
@@ -89,12 +85,12 @@ int ff3_1_cipher(char * const Y,
         free(numb);
 
         /* Step 4iii */
-        ffx_revb(P, P, 16);
+        ffx_revb(P, P, sizeof(P));
         ffx_ciph(P, rK, k, P);
-        ffx_revb(P, P, 16);
+        ffx_revb(P, P, sizeof(P));
 
         /* Step 4iv */
-        bigint_import(&y, P, 16);
+        bigint_import(&y, P, sizeof(P));
 
         /* Step 4v */
         ffx_revs(C, A);
@@ -133,6 +129,7 @@ int ff3_1_cipher(char * const Y,
 
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);
+    memset(P, 0, sizeof(P));
 
     bigint_deinit(&c);
     bigint_deinit(&y);
