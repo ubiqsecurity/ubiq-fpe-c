@@ -23,7 +23,7 @@ int ff1_cipher(char * const Y,
     const unsigned int p = 16;
     const unsigned int q = ((t + b + 1 + 15) / 16) * 16;
     const unsigned int z = q - (t + b + 1);
-    const unsigned int r = 16;
+    const unsigned int r = ((d + 15) / 16) * 16;
 
     struct {
         void * buf;
@@ -38,7 +38,7 @@ int ff1_cipher(char * const Y,
     bigint_init(&y);
     bigint_init(&c);
 
-    scratch.len = 3 * (v + 2) + p + q + r + ((((d + 15) / 16) - 1) * 16);
+    scratch.len = 3 * (v + 2) + p + q + r;
     scratch.buf = malloc(scratch.len);
     if (!scratch.buf) {
         bigint_deinit(&c);
@@ -105,15 +105,13 @@ int ff1_cipher(char * const Y,
         ffx_prf(R, K, k, P, p + q);
 
         /* Step 6iii */
-        for (unsigned int j = 1; j < (d + 15) / 16; j++) {
-            const unsigned int l = j * 16;
+        for (unsigned int j = 16; j < r; j += 16) {
+            memset(&R[j], 0, 16 - sizeof(j));
+            *(unsigned int *)&R[j + 16 - sizeof(j)] = htonl(j);
 
-            memset(&R[l], 0, 16 - sizeof(j));
-            *(unsigned int *)&R[16 + l - sizeof(j)] = htonl(j);
+            ffx_memxor(&R[j], &R[0], &R[j], 16);
 
-            ffx_memxor(&R[l], &R[0], &R[l], 16);
-
-            ffx_ciph(&R[l], K, k, &R[l]);
+            ffx_ciph(&R[j], K, k, &R[j]);
         }
 
         /* Step 6iv */

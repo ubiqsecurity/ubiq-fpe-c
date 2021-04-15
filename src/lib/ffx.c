@@ -86,8 +86,8 @@ int ffx_prf(uint8_t * const dst,
 
         EVP_EncryptInit_ex(ctx, ciph, NULL, K, IV);
         EVP_CIPHER_CTX_set_padding(ctx, 0);
-        for (unsigned int i = 0; i < len / 16; i++) {
-            EVP_EncryptUpdate(ctx, dst, &dstl, src + 16 * i, 16);
+        for (unsigned int i = 0; i < len; i += 16) {
+            EVP_EncryptUpdate(ctx, dst, &dstl, &src[i], 16);
         }
         EVP_EncryptFinal_ex(ctx, dst, &dstl);
         EVP_CIPHER_CTX_free(ctx);
