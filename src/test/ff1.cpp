@@ -22,7 +22,7 @@ void ff1_test(const uint8_t * const K, const size_t k,
     free(out);
 }
 
-TEST(ff1, sample1)
+TEST(ff1, nist1)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -37,7 +37,7 @@ TEST(ff1, sample1)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample2)
+TEST(ff1, nist2)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -54,7 +54,7 @@ TEST(ff1, sample2)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample3)
+TEST(ff1, nist3)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -71,7 +71,7 @@ TEST(ff1, sample3)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
 }
 
-TEST(ff1, sample4)
+TEST(ff1, nist4)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -87,7 +87,7 @@ TEST(ff1, sample4)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample5)
+TEST(ff1, nist5)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -105,7 +105,7 @@ TEST(ff1, sample5)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample6)
+TEST(ff1, nist6)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -123,7 +123,7 @@ TEST(ff1, sample6)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
 }
 
-TEST(ff1, sample7)
+TEST(ff1, nist7)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -140,7 +140,7 @@ TEST(ff1, sample7)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample8)
+TEST(ff1, nist8)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -159,7 +159,7 @@ TEST(ff1, sample8)
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
 }
 
-TEST(ff1, sample9)
+TEST(ff1, nist9)
 {
     const uint8_t K[] = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
