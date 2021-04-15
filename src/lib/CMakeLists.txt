@@ -4,6 +4,7 @@ add_library(
   OBJECT
 
   ff1.c
+  ff3_1.c
   ffx.c)
 
 if(WIN32)

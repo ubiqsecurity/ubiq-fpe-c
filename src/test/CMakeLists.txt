@@ -7,6 +7,7 @@ add_executable(
 
   bn.cpp
   ff1.cpp
+  ff3_1.cpp
   ffx.cpp)
 target_link_libraries(
   unittests
