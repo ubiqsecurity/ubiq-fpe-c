@@ -12,9 +12,11 @@ int ff1_cipher(char * const Y,
                const char * const X, const unsigned int radix,
                const int encrypt)
 {
+    /* Step 1 */
     const unsigned int n = strlen(X);
     const unsigned int u = n / 2, v = n - u;
 
+    /* Step 3, 4 */
     const unsigned int b = ((unsigned int)ceil(log2(radix) * v) + 7) / 8;
     const unsigned int d = 4 * ((b + 3) / 4) + 4;
 
@@ -55,6 +57,7 @@ int ff1_cipher(char * const Y,
     Q = P + p;
     R = Q + q;
 
+    /* Step 2 */
     if (encrypt) {
         memcpy(A, X + 0, u); A[u] = '\0';
         memcpy(B, X + u, v); B[v] = '\0';
@@ -63,6 +66,7 @@ int ff1_cipher(char * const Y,
         memcpy(A, X + u, v); A[v] = '\0';
     }
 
+    /* Step 5 */
     P[0] = 1;
     P[1] = 2;
     P[2] = 1;
@@ -74,18 +78,20 @@ int ff1_cipher(char * const Y,
     *(uint32_t *)&P[8]  = htonl(n);
     *(uint32_t *)&P[12] = htonl(t);
 
+    /* Step 6i, partial */
     memcpy(Q, T, t);
     memset(Q + t, 0, z);
 
     for (unsigned int i = 0; i < 10; i++) {
+        /* Step 6v */
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
 
         uint8_t * numb;
         size_t numc;
 
+        /* Step 6i, partial */
         bigint_set_str(&c, B, radix);
         numb = bigint_export(&c, &numc);
-
         Q[t + z] = encrypt ? i : (9 - i);
         if (b <= numc) {
             memcpy(&Q[t + z + 1], numb, b);
@@ -93,11 +99,12 @@ int ff1_cipher(char * const Y,
             memset(&Q[t + z + 1], 0, b - numc);
             memcpy(&Q[t + z + 1 + (b - numc)], numb, numc);
         }
-
         free(numb);
 
+        /* Step 6ii */
         ffx_prf(R, K, k, P, p + q);
 
+        /* Step 6iii */
         for (unsigned int j = 1; j < (d + 15) / 16; j++) {
             const unsigned int l = j * 16;
 
@@ -109,7 +116,10 @@ int ff1_cipher(char * const Y,
             ffx_ciph(&R[l], K, k, &R[l]);
         }
 
+        /* Step 6iv */
         bigint_import(&y, R, d);
+
+        /* Step 6vi */
         bigint_set_str(&c, A, radix);
         if (encrypt) {
             bigint_add(&c, &c, &y);
@@ -120,16 +130,20 @@ int ff1_cipher(char * const Y,
         bigint_pow_ui(&y, &y, m);
         bigint_mod(&c, &c, &y);
 
+        /* Step 6vii */
         ffx_str(C, v + 2, m, radix, &c);
 
         {
             char * const tmp = A;
+            /* Step 6viii */
             A = B;
+            /* Step 6ix */
             B = C;
             C = tmp;
         }
     }
 
+    /* Step 7 */
     if (encrypt) {
         strcpy(Y, A);
         strcat(Y, B);

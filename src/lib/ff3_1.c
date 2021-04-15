@@ -10,6 +10,7 @@ int ff3_1_cipher(char * const Y,
                  const char * const X, const unsigned int radix,
                  const int encrypt)
 {
+    /* Step 1 */
     const unsigned int n = strlen(X);
     const unsigned int v = n / 2, u = n - v;
 
@@ -19,6 +20,7 @@ int ff3_1_cipher(char * const Y,
     } scratch;
 
     char * A, * B, * C;
+    uint8_t * P;
     uint8_t * Tl, * Tr;
     uint8_t * rK;
 
@@ -27,7 +29,7 @@ int ff3_1_cipher(char * const Y,
     bigint_init(&y);
     bigint_init(&c);
 
-    scratch.len = 3 * (u + 2) + 2 * 4 + k;
+    scratch.len = 3 * (u + 2) + 2 * 4 + k + 16;
     scratch.buf = malloc(scratch.len);
     if (!scratch.buf) {
         bigint_deinit(&c);
@@ -44,6 +46,9 @@ int ff3_1_cipher(char * const Y,
 
     rK = Tr + 4;
 
+    P = rK + k;
+
+    /* Step 2 */
     if (encrypt) {
         memcpy(A, X + 0, u); A[u] = '\0';
         memcpy(B, X + u, v); B[v] = '\0';
@@ -52,6 +57,7 @@ int ff3_1_cipher(char * const Y,
         memcpy(A, X + u, v); A[v] = '\0';
     }
 
+    /* Step 3 */
     memcpy(&Tl[0], &T[0], 3);
     Tl[3] = T[3] & 0xf0;
 
@@ -61,35 +67,36 @@ int ff3_1_cipher(char * const Y,
     ffx_revb(rK, K, k);
 
     for (unsigned int i = 0; i < 8; i++) {
+        /* Step 4i */
         const uint8_t * const W = ((i + !!encrypt) % 2) ? Tr : Tl;
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
-
-        uint8_t P[4 + 12];
 
         uint8_t * numb;
         size_t numc;
 
+        /* Step 4ii */
         memcpy(P, W, 4);
         *(uint32_t *)&P[3] ^= encrypt ? i : (7 - i);
-
         ffx_revs(C, B);
         bigint_set_str(&c, C, radix);
         numb = bigint_export(&c, &numc);
-
         if (12 <= numc) {
             memcpy(&P[4], numb, 12);
         } else {
             memset(&P[4], 0, 12 - numc);
             memcpy(&P[4 + (12 - numc)], numb, numc);
         }
-
         free(numb);
 
-        ffx_revb(P, P, sizeof(P));
+        /* Step 4iii */
+        ffx_revb(P, P, 16);
         ffx_ciph(P, rK, k, P);
-        ffx_revb(P, P, sizeof(P));
+        ffx_revb(P, P, 16);
 
-        bigint_import(&y, P, sizeof(P));
+        /* Step 4iv */
+        bigint_import(&y, P, 16);
+
+        /* Step 4v */
         ffx_revs(C, A);
         bigint_set_str(&c, C, radix);
         if (encrypt) {
@@ -101,17 +108,21 @@ int ff3_1_cipher(char * const Y,
         bigint_pow_ui(&y, &y, m);
         bigint_mod(&c, &c, &y);
 
+        /* Step 4vi */
         ffx_str(C, u + 2, m, radix, &c);
         ffx_revs(C, C);
 
         {
             char * const tmp = A;
+            /* Step 4vii */
             A = B;
+            /* Step 4viii */
             B = C;
             C = tmp;
         }
     }
 
+    /* Step 5 */
     if (encrypt) {
         strcpy(Y, A);
         strcat(Y, B);
