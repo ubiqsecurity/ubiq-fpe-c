@@ -47,15 +47,16 @@ int ff1_cipher(char * const Y,
     }
 
     /*
-     * TODO: maybe P, Q, and R should be at the
-     * front so that they can be 16-byte aligned
+     * P, Q, and R at the front so that they are all 16-byte
+     * aligned. P and Q must remain adjacent since they are
+     * concatenated as part of the algorithm
      */
-    A = scratch.buf;
-    B = A + v + 2;
-    C = B + v + 2;
-    P = C + v + 2;
+    P = scratch.buf;
     Q = P + p;
     R = Q + q;
+    A = R + r;
+    B = A + v + 2;
+    C = B + v + 2;
 
     /* Step 2 */
     if (encrypt) {
