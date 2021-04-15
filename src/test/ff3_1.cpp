@@ -65,8 +65,8 @@ TEST(ff3_1, ubiq3)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72,
     };
 
-    const char PT[] = "89012123456789abcd";
-    const char CT[] = "aw75tnkkj9ceflnqx8";
+    const char PT[] = "89012123456789abcde";
+    const char CT[] = "dwb01mx9aa2lmi3hrfm";
 
     ff3_1_test(K, sizeof(K), T, PT, CT, 36);
 }
@@ -117,8 +117,8 @@ TEST(ff3_1, ubiq6)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72,
     };
 
-    const char PT[] = "89012123456789abcd";
-    const char CT[] = "81wr04fi9op4ve2w2z";
+    const char PT[] = "89012123456789abcde";
+    const char CT[] = "o3a1og390b5uduvwyw5";
 
     ff3_1_test(K, sizeof(K), T, PT, CT, 36);
 }
@@ -172,8 +172,8 @@ TEST(ff3_1, ubiq9)
         0x37, 0x37, 0x37, 0x37, 0x70, 0x71, 0x72,
     };
 
-    const char PT[] = "89012123456789abcd";
-    const char CT[] = "i5cz928n3azucq8kjl";
+    const char PT[] = "89012123456789abcde";
+    const char CT[] = "0sxaooj0jjj5qqfomh8";
 
     ff3_1_test(K, sizeof(K), T, PT, CT, 36);
 }
