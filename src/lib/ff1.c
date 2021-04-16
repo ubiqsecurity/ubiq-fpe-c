@@ -67,7 +67,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     char * A, * B, * C;
     uint8_t * P, * Q, * R;
 
-    unsigned int q, z;
+    unsigned int q;
 
     bigint_t y, c;
 
@@ -88,8 +88,6 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     /* the number of bytes in Q */
     q = ((t + b + 1 + 15) / 16) * 16;
-    /* the number of bytes of zero padding within Q */
-    z = q - (t + b + 1);
 
     bigint_init(&y);
     bigint_init(&c);
@@ -140,7 +138,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
      * these parts of @Q are static
      */
     memcpy(Q, T, t);
-    memset(Q + t, 0, z);
+    memset(Q + t, 0, q - (t + b + 1));
 
     for (unsigned int i = 0; i < 10; i++) {
         /* Step 6v */
@@ -150,7 +148,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         size_t numc;
 
         /* Step 6i, partial */
-        Q[t + z] = encrypt ? i : (9 - i);
+        Q[q - b - 1] = encrypt ? i : (9 - i);
 
         /*
          * convert the numeral string indicated by @B
@@ -161,11 +159,11 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         bigint_set_str(&c, B, ctx->ffx.radix);
         numb = bigint_export(&c, &numc);
         if (b <= numc) {
-            memcpy(&Q[t + z + 1], numb, b);
+            memcpy(&Q[q - b], numb, b);
         } else {
             /* pad on the left with zeros, if needed */
-            memset(&Q[t + z + 1], 0, b - numc);
-            memcpy(&Q[t + z + 1 + (b - numc)], numb, numc);
+            memset(&Q[q - b], 0, b - numc);
+            memcpy(&Q[q - b + (b - numc)], numb, numc);
         }
         free(numb);
 
