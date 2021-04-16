@@ -39,6 +39,7 @@ int ff3_1_ctx_create(struct ff3_1_ctx ** const ctx,
             7, 7,
             radix);
         if (res == 0) {
+            /* the key used in ff3-1 is the reverse of the given key */
             ffx_revb((*ctx)->ffx.key.buf,
                      (*ctx)->ffx.key.buf, (*ctx)->ffx.key.len);
         }
@@ -69,16 +70,18 @@ int ff3_1_cipher(struct ff3_1_ctx * const ctx,
     } scratch;
 
     uint8_t P[16];
-    uint8_t Tl[4], Tr[4];
+    uint8_t Tw[2][4];
 
     char * A, * B, * C;
 
     bigint_t y, c;
 
+    /* use the default tweak if none is given */
     if (!T) {
         T = ctx->ffx.twk.buf;
     }
 
+    /* check the text length */
     if (n < ctx->ffx.txtlen.min ||
         n > ctx->ffx.txtlen.max) {
         return -EINVAL;
@@ -109,29 +112,35 @@ int ff3_1_cipher(struct ff3_1_ctx * const ctx,
     }
 
     /* Step 3 */
-    memcpy(&Tl[0], &T[0], 3);
-    Tl[3] = T[3] & 0xf0;
+    memcpy(&Tw[0][0], &T[0], 3);
+    Tw[0][3] = T[3] & 0xf0;
 
-    memcpy(&Tr[0], &T[4], 3);
-    Tr[3] = (T[3] & 0x0f) << 4;
+    memcpy(&Tw[1][0], &T[4], 3);
+    Tw[1][3] = (T[3] & 0x0f) << 4;
 
     for (unsigned int i = 0; i < 8; i++) {
         /* Step 4i */
-        const uint8_t * const W = ((i + !!encrypt) % 2) ? Tr : Tl;
+        const uint8_t * const W = Tw[(i + !!encrypt) % 2];
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
 
         uint8_t * numb;
         size_t numc;
 
         /* Step 4ii */
+        /* W ^ i */
         memcpy(P, W, 4);
         *(uint32_t *)&P[3] ^= encrypt ? i : (7 - i);
+        /*
+         * reverse @B and convert numeral string to integer
+         * which is then exported to a number as a byte array
+         */
         ffx_revs(C, B);
         bigint_set_str(&c, C, ctx->ffx.radix);
         numb = bigint_export(&c, &numc);
         if (12 <= numc) {
             memcpy(&P[4], numb, 12);
         } else {
+            /* zero pad on left, if necessary */
             memset(&P[4], 0, 12 - numc);
             memcpy(&P[4 + (12 - numc)], numb, numc);
         }
@@ -146,15 +155,22 @@ int ff3_1_cipher(struct ff3_1_ctx * const ctx,
         bigint_import(&y, P, sizeof(P));
 
         /* Step 4v */
+        /*
+         * set c to the reversal of A converted
+         * to an integer under the radix
+         */
         ffx_revs(C, A);
         bigint_set_str(&c, C, ctx->ffx.radix);
+        /* c = rev(A) +/- y */
         if (encrypt) {
             bigint_add(&c, &c, &y);
         } else {
             bigint_sub(&c, &c, &y);
         }
+        /* now set @y to radix**m */
         bigint_set_ui(&y, ctx->ffx.radix);
         bigint_pow_ui(&y, &y, m);
+        /* c = (rev(A) +/- y) mod radix**m */
         bigint_mod(&c, &c, &y);
 
         /* Step 4vi */
