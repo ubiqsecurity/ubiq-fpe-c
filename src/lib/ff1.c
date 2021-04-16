@@ -71,11 +71,13 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     bigint_t y, c;
 
+    /* use the default tweak when none is supplied */
     if (t == 0) {
         T = ctx->ffx.twk.buf;
         t = ctx->ffx.twk.len;
     }
 
+    /* check the text and tweak lengths */
     if (n < ctx->ffx.txtlen.min ||
         n > ctx->ffx.txtlen.max ||
         t < ctx->ffx.twklen.min ||
@@ -84,7 +86,9 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         return -EINVAL;
     }
 
+    /* the number of bytes in Q */
     q = ((t + b + 1 + 15) / 16) * 16;
+    /* the number of bytes of zero padding within Q */
     z = q - (t + b + 1);
 
     bigint_init(&y);
@@ -123,7 +127,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     P[0] = 1;
     P[1] = 2;
     P[2] = 1;
-    P[3] = 0;
+    P[3] = ctx->ffx.radix >> 16;
     P[4] = ctx->ffx.radix >> 8;
     P[5] = ctx->ffx.radix;
     P[6] = 10;
@@ -131,7 +135,10 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     *(uint32_t *)&P[8]  = htonl(n);
     *(uint32_t *)&P[12] = htonl(t);
 
-    /* Step 6i, partial */
+    /*
+     * Step 6i, partial
+     * these parts of @Q are static
+     */
     memcpy(Q, T, t);
     memset(Q + t, 0, z);
 
@@ -143,12 +150,20 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         size_t numc;
 
         /* Step 6i, partial */
+        Q[t + z] = encrypt ? i : (9 - i);
+
+        /*
+         * convert the numeral string indicated by @B
+         * to an integer and then export that integer
+         * as a byte array representation and store
+         * it into @Q
+         */
         bigint_set_str(&c, B, ctx->ffx.radix);
         numb = bigint_export(&c, &numc);
-        Q[t + z] = encrypt ? i : (9 - i);
         if (b <= numc) {
             memcpy(&Q[t + z + 1], numb, b);
         } else {
+            /* pad on the left with zeros, if needed */
             memset(&Q[t + z + 1], 0, b - numc);
             memcpy(&Q[t + z + 1 + (b - numc)], numb, numc);
         }
@@ -157,28 +172,44 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         /* Step 6ii */
         ffx_prf(&ctx->ffx, R, P, p + q);
 
-        /* Step 6iii */
-        for (unsigned int j = 16; j < r; j += 16) {
-            memset(&R[j], 0, 16 - sizeof(j));
-            *(unsigned int *)&R[j + 16 - sizeof(j)] = htonl(j);
+        /*
+         * Step 6iii:
+         * if r is greater than 16 (it will be a multiple of 16),
+         * fill the 2nd and subsequent blocks with the result
+         * of ciph(R ^ 1), ciph(R ^ 2), ...
+         */
+        for (unsigned int j = 1; j < r / 16; j++) {
+            const unsigned int l = j * 16;
 
-            ffx_memxor(&R[j], &R[0], &R[j], 16);
+            memset(&R[l], 0, 16 - sizeof(j));
+            *(unsigned int *)&R[l + (16 - sizeof(j))] = htonl(j);
 
-            ffx_ciph(&ctx->ffx, &R[j], &R[j]);
+            ffx_memxor(&R[l], &R[0], &R[l], 16);
+
+            ffx_ciph(&ctx->ffx, &R[l], &R[l]);
         }
 
-        /* Step 6iv */
+        /*
+         * Step 6iv
+         * create an integer from the first @d bytes in @R
+         */
         bigint_import(&y, R, d);
 
         /* Step 6vi */
+        /*
+         * create an integer from @A in the given radix.
+         * set @c to A +/- y
+         */
         bigint_set_str(&c, A, ctx->ffx.radix);
         if (encrypt) {
             bigint_add(&c, &c, &y);
         } else {
             bigint_sub(&c, &c, &y);
         }
+        /* set @y to radix**m */
         bigint_set_ui(&y, ctx->ffx.radix);
         bigint_pow_ui(&y, &y, m);
+        /* c = (A +/- y) mod radix**m */
         bigint_mod(&c, &c, &y);
 
         /* Step 6vii */
