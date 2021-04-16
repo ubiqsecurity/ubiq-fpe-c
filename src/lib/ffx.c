@@ -2,6 +2,15 @@
 
 #include <math.h>
 
+/*
+ * This function is intended to be used to create a context for
+ * a specific algorithm. That is, the algorithm embeds the ffx_ctx
+ * structure within a structure of its own. It then supplies the
+ * total length of its structure as the @len parameter and the offset
+ * to the ffx_ctx structure within as the @off parameter.
+ *
+ * The other parameters describe the limits/parameters of the algorithm.
+ */
 int ffx_ctx_create(void ** const _ctx,
                    const size_t len, const size_t off,
                    const uint8_t * const keybuf, const size_t keylen,
@@ -14,6 +23,7 @@ int ffx_ctx_create(void ** const _ctx,
     const EVP_CIPHER * ciph;
     size_t mintxtlen;
 
+    /* the key length determines the flavor of AES */
     switch (keylen) {
     case 16: ciph = EVP_aes_128_cbc(); break;
     case 24: ciph = EVP_aes_192_cbc(); break;
@@ -24,6 +34,11 @@ int ffx_ctx_create(void ** const _ctx,
         return -EINVAL;
     }
 
+    /*
+     * FF1 and FF3-1 support a radix up to 65536, but the
+     * implementation becomes increasingly difficult and
+     * less useful in practice after the limits below.
+     */
     if (radix < 2 || radix > 36) {
         return -EINVAL;
     }
@@ -33,21 +48,34 @@ int ffx_ctx_create(void ** const _ctx,
      *
      * therefore:
      *   minlen = ceil(log_radix(1000000))
-     *
-     *   = ceil(log_10(1000000) / log_10(radix))
-     *   = ceil(6 / log_10(radix))
+     *          = ceil(log_10(1000000) / log_10(radix))
+     *          = ceil(6 / log_10(radix))
      */
     mintxtlen = ceil((double)6 / log10(radix));
     if (mintxtlen < 2 || mintxtlen > maxtxtlen) {
         return -EOVERFLOW;
     }
 
+    /*
+     * make sure the default tweak falls within the
+     * specified parameters for the algorithm
+     *
+     * a maxtwklen of 0 indicates that there is
+     * no upper limit
+     */
     if (mintwklen > maxtwklen ||
         twklen < mintwklen ||
         (maxtwklen > 0 && twklen > maxtwklen)) {
         return -EINVAL;
     }
 
+    /*
+     * allocate space and copy in the parameters
+     *
+     * the only way to fail at this point is if this
+     * allocation or the allocation of the evp context
+     * fails
+     */
     *_ctx = malloc(len + keylen + twklen);
     if (*_ctx) {
         ctx = (void *)((uint8_t *)*_ctx + off);
@@ -83,12 +111,20 @@ void ffx_ctx_destroy(void * const _ctx, const size_t off)
 {
     struct ffx_ctx * const ctx = (void *)((uint8_t *)_ctx + off);
 
+    /*
+     * wipe out the key, but the tweak was already
+     * public, so no need to wipe it out
+     */
     memset(ctx->key.buf, 0, ctx->key.len);
     EVP_CIPHER_CTX_free(ctx->evp);
 
     free(_ctx);
 }
 
+/*
+ * reverse a sequence of bytes. @dst and @src may be
+ * equal but may not overlap, otherwise
+ */
 uint8_t * ffx_revb(uint8_t * const dst,
                    const uint8_t * const src, const size_t len)
 {
@@ -100,6 +136,10 @@ uint8_t * ffx_revb(uint8_t * const dst,
         dst[(len - 1)- i] = t;
     }
 
+    /*
+     * if length is odd, there will be a byte in the
+     * middle untouched by the loop above
+     */
     if (len % 2) {
         dst[i] = src[i];
     }
@@ -107,6 +147,22 @@ uint8_t * ffx_revb(uint8_t * const dst,
     return dst;
 }
 
+/*
+ * convert a (big) integer, @n, to a string in the radix, @r,
+ * with a length, @m. The caller must supply the space pointed
+ * to by @str, and the number of bytes pointed to by @str is
+ * indicated by @len, which must be at least @m + 2. (The
+ * underlying number library sometimes overestimates the space
+ * required to represent the string. The +2 includes 1 byte
+ * for this overestimation and 1 byte for the nul terminator.)
+ *
+ * If, after conversion, the number of bytes necessary to
+ * represent the @n is larger than @m, the function fails. if
+ * the number of bytes is less than @m, the string is zero-padded
+ * to the left.
+ *
+ * the function returns 0 on success
+ */
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r,
             const bigint_t * const n)
@@ -131,6 +187,16 @@ int ffx_str(char * const str, const size_t len,
     return res;
 }
 
+/*
+ * perform a byte-wise exclusive-or operation over the sequence
+ * of bytes pointed to by @s1 and @s2, storing the result into @d.
+ * @len indicates the minimum number of bytes in @s1, @s2, and @d.
+ *
+ * @d may be equal to @s1 and/or @s2, but they may not overlap,
+ * otherwise
+ *
+ * @d is returned
+ */
 void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len)
@@ -149,6 +215,14 @@ void * ffx_memxor(void * d,
     return d;
 }
 
+/*
+ * perform an aes-cbc encryption (with an IV of 0) of @src using
+ * the supplied @ctx, storing the last block of output into @dst.
+ * The number of bytes pointed to by @src is indicated by @len and
+ * must be a multiple of 16. @dst and @src may point to the same
+ * location but may not overlap, otherwise. @dst must point to a
+ * location at least 16 bytes long
+ */
 int ffx_prf(struct ffx_ctx * const ctx,
             uint8_t * const dst,
             const uint8_t * const src, const size_t len)
@@ -163,15 +237,35 @@ int ffx_prf(struct ffx_ctx * const ctx,
 
     EVP_CIPHER_CTX_reset(ctx->evp);
     EVP_EncryptInit_ex(ctx->evp, ctx->ciph, NULL, ctx->key.buf, IV);
+
+    /* don't do any padding */
     EVP_CIPHER_CTX_set_padding(ctx->evp, 0);
+
+    /*
+     * this function only returns the last encrypted block,
+     * so do the encryption one block at a time so that the
+     * result can be written to the destination (without
+     * requiring that the destination location be as large
+     * as the source)
+     */
     for (unsigned int i = 0; i < len; i += 16) {
         EVP_EncryptUpdate(ctx->evp, dst, &dstl, &src[i], 16);
     }
-    EVP_EncryptFinal_ex(ctx->evp, dst, &dstl);
+
+    /*
+     * final doesn't output anything since there is no padding;
+     * however, the output length parameter must still be valid
+     */
+    EVP_EncryptFinal_ex(ctx->evp, NULL, &dstl);
 
     return 0;
 }
 
+/*
+ * perform an aes-ecb encryption of @src using the supplied @ctx.
+ * @src and @dst must each be 16 bytes long. @src and @dst may
+ * point to the same location or otherwise overlap
+ */
 int ffx_ciph(struct ffx_ctx * const ctx,
              uint8_t * const dst, const uint8_t * const src)
 {
