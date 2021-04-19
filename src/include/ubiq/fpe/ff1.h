@@ -10,12 +10,13 @@ __BEGIN_DECLS
 struct ff1_ctx;
 
 /*
- * Create a context structure for use with the FF1 algorithm
+ * Create a context instance for use with the FF1 algorithm
  *
- * The created structure can be used for encryption or decryption
- * or both. However, the structure is not thread-safe. For example,
- * it cannot be used for simultaneous encryptions/decryptions in
- * multiple threads.
+ * The created instance can be used for encryption or decryption
+ * or both. The instance is not thread-safe, though. For example,
+ * multiple instances can be created and used in different, individual
+ * threads. However, a single instance cannot be used for simultaneous
+ * encryptions/decryptions in multiple threads.
  *
  * @ctx: Pointer to location to store pointer to context data
  *       Caller supplies the address to a pointer. This function
@@ -54,7 +55,8 @@ int ff1_ctx_create(struct ff1_ctx ** const ctx,
  * @T: A pointer to the "tweak" parameter. This is a sequence of bytes
  *     and may be NULL. In the event that the tweak is NULL, the tweak
  *     supplied to the create function will be used.
- * @t: The number of bytes pointed to by @T. If T is NULL, t must be zero.
+ * @t: The number of bytes pointed to by @T. If T is NULL, t is a
+ *     don't-care
  *
  * @return 0 on success or a negative error number on failure
  */

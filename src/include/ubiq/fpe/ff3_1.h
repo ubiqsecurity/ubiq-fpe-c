@@ -10,12 +10,13 @@ __BEGIN_DECLS
 struct ff3_1_ctx;
 
 /*
- * Create a context structure for use with the FF3-1 algorithm
+ * Create a context instance for use with the FF3-1 algorithm
  *
- * The created structure can be used for encryption or decryption
- * or both. However, the structure is not thread-safe. For example,
- * it cannot be used for simultaneous encryptions/decryptions in
- * multiple threads.
+ * The created instance can be used for encryption or decryption
+ * or both. The instance is not thread-safe, though. For example,
+ * multiple instances can be created and used in different, individual
+ * threads. However, a single instance cannot be used for simultaneous
+ * encryptions/decryptions in multiple threads.
  *
  * @ctx: Pointer to location to store pointer to context data
  *       Caller supplies the address to a pointer. This function
