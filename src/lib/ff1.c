@@ -72,7 +72,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     bigint_t y, c;
 
     /* use the default tweak when none is supplied */
-    if (t == 0) {
+    if (T == NULL) {
         T = ctx->ffx.twk.buf;
         t = ctx->ffx.twk.len;
     }
