@@ -163,7 +163,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         } else {
             /* pad on the left with zeros, if needed */
             memset(&Q[q - b], 0, b - numc);
-            memcpy(&Q[q - b + (b - numc)], numb, numc);
+            memcpy(&Q[q - numc], numb, numc);
         }
         free(numb);
 
