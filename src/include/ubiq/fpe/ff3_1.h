@@ -33,7 +33,7 @@ int ff3_1_ctx_create(struct ff3_1_ctx ** const ctx,
                      const unsigned int radix);
 
 /*
- * Encrypt data using the FF1 algorithm
+ * Encrypt data using the FF3-1 algorithm
  *
  * Encryption is a "one-shot" operation. The entire plain text must
  * be passed in, and the entire cipher text is returned. The cipher
@@ -47,8 +47,9 @@ int ff3_1_ctx_create(struct ff3_1_ctx ** const ctx,
  * @X: A pointer to the location of the plain text. The plain text must
  *     be nul-terminated
  * @T: A pointer to the "tweak" parameter. This is a sequence of bytes
- *     and may be NULL. In the event that the tweak is NULL, the tweak
- *     supplied to the create function will be used.
+ *     and may be NULL. If non-NULL, the sequence must be 7 bytes in length.
+ *     In the event that the tweak is NULL, the tweak supplied to the create
+ *     function will be used.
  *
  * @return 0 on success or a negative error number on failure
  */
