@@ -129,7 +129,7 @@ int ff3_1_cipher(struct ff3_1_ctx * const ctx,
         /* Step 4ii */
         /* W ^ i */
         memcpy(P, W, 4);
-        *(uint32_t *)&P[3] ^= encrypt ? i : (7 - i);
+        P[3] ^= encrypt ? i : (7 - i);
         /*
          * reverse @B and convert numeral string to integer
          * which is then exported to a number as a byte array
