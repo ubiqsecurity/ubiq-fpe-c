@@ -40,7 +40,7 @@ $ valgrind build/src/test/unittests
 # Documentation
 
 The interfaces are documented in the respective headers for
-[FF1](src/include/ubiq/fpe/ff1.h) and [FF3](src/include/ubiq/fpe/ff3_1.h).
+[FF1](src/include/ubiq/fpe/ff1.h) and [FF3-1](src/include/ubiq/fpe/ff3_1.h).
 
 ### About alphabets and the radix parameter
 
@@ -62,16 +62,16 @@ by the library and must be done prior to calling the encrypt and after calling
 the decrypt functions.
 
 A radix of up to 36 is supported, and the alphabet for a radix of 36 is
-"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".
+"0123456789abcdefghijklmnopqrstuvwxyz".
 
 ### Tweaks
 
 Tweaks are very much like Initialization Vectors (IVs) in "traditional"
 encryption algorithms. For FF1, the minimun and maximum allowed lengths of
 the tweak may be specified by the user, and any tweak length between those
-values may be used. For FF3, the size of the tweak is fixed at 7 bytes.
+values may be used. For FF3-1, the size of the tweak is fixed at 7 bytes.
 
-### Input lengths
+### Plain/ciphertext input lengths
 
 For both FF1 and FF3-1, the minimum length is determined by the inequality:
 - radix<sup>minlen</sup> >= 1000000

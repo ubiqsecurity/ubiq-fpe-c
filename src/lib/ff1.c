@@ -40,6 +40,11 @@ void ff1_ctx_destroy(struct ff1_ctx * const ctx)
     ffx_ctx_destroy((void *)ctx, offsetof(struct ff1_ctx, ffx));
 }
 
+/*
+ * The comments below reference the steps of the algorithm described here:
+ *
+ * https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38Gr1-draft.pdf
+ */
 static
 int ff1_cipher(struct ff1_ctx * const ctx,
                char * const Y,
