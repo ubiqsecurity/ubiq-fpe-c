@@ -8,7 +8,8 @@ add_executable(
   bn.cpp
   ff1.cpp
   ff3_1.cpp
-  ffx.cpp)
+  ffx.cpp
+  radix.cpp)
 target_link_libraries(
   unittests
   gtest gtest_main ubiqfpe)
