@@ -22,3 +22,13 @@ TEST(radix, oct2hex)
 {
     radix_test("100", "01234567", "0123456789ABCDEF", "40");
 }
+
+TEST(radix, dec2dec)
+{
+    radix_test("@$#", "!@#$%^&*()", "0123456789", "132");
+}
+
+TEST(radix, oct2dec)
+{
+    radix_test("@$#", "!@#$%^&*", "0123456789", "90");
+}

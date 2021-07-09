@@ -11,18 +11,18 @@
  * symbol represents the numerical value associated with its
  * index/position in the alphabet. for example, consider the
  * alphabet:
- *   !@#$%^&*(
+ *   !@#$%^&*()
  * In this alphabet ! occupies index 0 and is therefore
  * assigned that value. @ = 1, # = 2, etc. Furthermore, the
  * alphabet contains 10 characters, so that becomes the radix
  * of the input. Using the alphabet above, an input of @$#
- * translates to a value of 243 (two hundred forty-three,
+ * translates to a value of 132 (one hundred thirty-two,
  * decimal).
  *
  * If the alphabet above were instead:
- *   !@#$%^&
+ *   !@#$%^&*
  * The radix would be 8 and an input of @$# translates to a
- * value of 163 (one hundred sixty-three, decimal).
+ * value of 90 (ninety, decimal).
  */
 int radix_convert(char * const out, const char * const oalpha,
                   const char * const inp, const char * const ialpha)
