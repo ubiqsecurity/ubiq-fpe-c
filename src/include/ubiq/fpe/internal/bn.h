@@ -93,10 +93,24 @@ void bigint_sub(bigint_t * const res,
 }
 
 static inline
+void bigint_mul_ui(bigint_t * const res,
+                   const bigint_t * const m1, const unsigned int m2)
+{
+    mpz_mul_ui(*res, *m1, m2);
+}
+
+static inline
 void bigint_pow_ui(bigint_t * const res,
                    const bigint_t * const base, const unsigned int exp)
 {
     mpz_pow_ui(*res, *base, exp);
+}
+
+static inline
+void bigint_div_ui(bigint_t * const q, unsigned int * const r,
+                   const bigint_t * const n, const unsigned int d)
+{
+    *r = mpz_tdiv_q_ui(*q, *n, d);
 }
 
 static inline
