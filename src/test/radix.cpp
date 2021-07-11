@@ -5,12 +5,17 @@ static
 void radix_test(const char * const input, const char * const ialpha,
                 const char * const oalpha, const char * const expect)
 {
-    char output[64];
-    int res;
+    std::string output;
+    int r1, r2;
 
-    res = radix_convert(output, oalpha, input, ialpha);
-    EXPECT_EQ(res, 0);
-    EXPECT_EQ(std::string(output), expect);
+    r1 = radix_convert(nullptr, oalpha, input, ialpha);
+    ASSERT_GT(r1, 0);
+    output.resize(r1);
+
+    r2 = radix_convert((char *)output.data(), oalpha, input, ialpha);
+    EXPECT_EQ(r1, r2);
+
+    ASSERT_EQ(std::string(output), expect);
 }
 
 TEST(radix, dec2hex)

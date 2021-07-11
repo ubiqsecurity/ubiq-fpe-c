@@ -23,6 +23,14 @@
  *   !@#$%^&*
  * The radix would be 8 and an input of @$# translates to a
  * value of 90 (ninety, decimal).
+ *
+ * The function returns the number of bytes required to express
+ * the output value, NOT including the nul-terminator.
+ *
+ * The function may be called with @out set to NULL to obtain
+ * the number of bytes required for the output. If @out is not
+ * NULL, then the output, NOT including the nul-terminator, will
+ * be written to @out.
  */
 int radix_convert(char * const out, const char * const oalpha,
                   const char * const inp, const char * const ialpha)
@@ -105,23 +113,30 @@ int radix_convert(char * const out, const char * const oalpha,
 
     while (bigint_cmp_si(&n, 0) != 0) {
         bigint_div_ui(&n, &r, &n, rad);
-        out[i++] = oalpha[r];
+        if (out) {
+            out[i] = oalpha[r];
+        }
+        i++;
     }
 
     /* handle the case where the initial value was 0 */
     if (!i) {
-        out[i++] = oalpha[0];
+        if (out) {
+            out[i] = oalpha[0];
+        }
+        i++;
     }
-    out[i] = '\0';
 
-    /*
-     * to simplify conversion from a number to a string,
-     * the output digits are stored in reverse order.
-     * reverse the final value so that the output is correct
-     */
-    ffx_revs(out, out);
+    if (out) {
+        /*
+         * to simplify conversion from a number to a string,
+         * the output digits are stored in reverse order.
+         * reverse the final value so that the output is correct
+         */
+        ffx_revb(out, out, i);
+    }
 
     bigint_deinit(&n);
 
-    return 0;
+    return i;
 }
