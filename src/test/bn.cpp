@@ -18,8 +18,8 @@ TEST(bn, set_str)
 }
 
 static
-void radix_test(const char * const input, const char * const ialpha,
-                const char * const oalpha, const char * const expect)
+void __radix_test(const char * const input, const char * const ialpha,
+                  const char * const oalpha, const char * const expect)
 {
     bigint_t n;
     int r1, r2;
@@ -41,6 +41,16 @@ void radix_test(const char * const input, const char * const ialpha,
     EXPECT_EQ(std::string(output), expect);
 
     bigint_deinit(&n);
+}
+
+static
+void radix_test(const char * const input, const char * const ialpha,
+                const char * const oalpha, const char * const expect)
+{
+    /* convert from one radix to another */
+    __radix_test(input, ialpha, oalpha, expect);
+    /* test that the conversion can be successfully reversed */
+    __radix_test(expect, oalpha, ialpha, input);
 }
 
 TEST(radix, dec2hex)
