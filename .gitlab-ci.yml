@@ -31,7 +31,6 @@ test:
     stage: test
     before_script:
         - apt -y update
-        - apt -y install cmake
         - apt -y install libgmp10 libssl1.1
     script:
-        - cmake --build build --target test -- -j$(nproc)
+        - build/src/test/unittests
