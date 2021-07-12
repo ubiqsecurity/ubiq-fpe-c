@@ -6,9 +6,7 @@ add_library(
   bn.c
   ff1.c
   ff3_1.c
-  ffx.c
-
-  radix.c)
+  ffx.c)
 
 if(WIN32)
   # silence warnings about "more secure"

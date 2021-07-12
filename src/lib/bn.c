@@ -3,6 +3,28 @@
 
 #include <string.h>
 
+/*
+ * Convert a numerical value in a given alphabet to a number
+ *
+ * An alphabet consists of single-byte symbols in which each
+ * symbol represents the numerical value associated with its
+ * index/position in the alphabet. for example, consider the
+ * alphabet:
+ *   !@#$%^&*()
+ * In this alphabet ! occupies index 0 and is therefore
+ * assigned that value. @ = 1, # = 2, etc. Furthermore, the
+ * alphabet contains 10 characters, so that becomes the radix
+ * of the input. Using the alphabet above, an input of @$#
+ * translates to a value of 132 (one hundred thirty-two,
+ * decimal).
+ *
+ * If the alphabet above were instead:
+ *   !@#$%^&*
+ * The radix would be 8 and an input of @$# translates to a
+ * value of 90 (ninety, decimal).
+ *
+ * The function returns 0 or a negative error number
+ */
 int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha)
 {
@@ -68,6 +90,13 @@ int __bigint_set_str(bigint_t * const x,
     return err;
 }
 
+/*
+ * This function returns the number of bytes (that would have been)
+ * written to the output string (if the length of the available space
+ * is sufficient). not including a nul terminator. A nul terminator
+ * is never written. In short, success is determined by the return value
+ * being less than or equal to @len.
+ */
 int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const _x)
 {
@@ -94,7 +123,7 @@ int __bigint_get_str(char * const str, const size_t len,
         int r;
 
         bigint_div_ui(&x, &r, &x, rad);
-        if (str && i < len) {
+        if (i < len) {
             str[i] = alpha[r];
         }
         i++;
@@ -102,13 +131,13 @@ int __bigint_get_str(char * const str, const size_t len,
 
     /* handle the case where the initial value was 0 */
     if (!i) {
-        if (str && i < len) {
+        if (i < len) {
             str[i] = alpha[0];
         }
         i++;
     }
 
-    if (str && i <= len) {
+    if (i <= len) {
         /*
          * to simplify conversion from a number to a string,
          * the output digits are stored in reverse order.
