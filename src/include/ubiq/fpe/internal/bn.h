@@ -29,12 +29,18 @@ void bigint_set_ui(bigint_t * const x, const unsigned int n)
     mpz_set_ui(*x, n);
 }
 
+int __bigint_set_str(bigint_t * const x,
+                     const char * const str, const char * const alpha);
+
 static inline
 int bigint_set_str(bigint_t * const x,
                    const char * const str, const unsigned int radix)
 {
     return mpz_set_str(*x, str, radix);
 }
+
+int __bigint_get_str(char * const str, const size_t len,
+                     const char * const alpha, const bigint_t * const x);
 
 static inline
 int bigint_get_str(char * const str, const size_t len,

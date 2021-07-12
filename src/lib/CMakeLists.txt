@@ -3,6 +3,7 @@ add_library(
 
   OBJECT
 
+  bn.c
   ff1.c
   ff3_1.c
   ffx.c
