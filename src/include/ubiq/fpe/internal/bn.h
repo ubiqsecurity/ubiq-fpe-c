@@ -29,12 +29,18 @@ void bigint_set_ui(bigint_t * const x, const unsigned int n)
     mpz_set_ui(*x, n);
 }
 
+int __bigint_set_str(bigint_t * const x,
+                     const char * const str, const char * const alpha);
+
 static inline
 int bigint_set_str(bigint_t * const x,
                    const char * const str, const unsigned int radix)
 {
     return mpz_set_str(*x, str, radix);
 }
+
+int __bigint_get_str(char * const str, const size_t len,
+                     const char * const alpha, const bigint_t * const x);
 
 static inline
 int bigint_get_str(char * const str, const size_t len,
@@ -93,10 +99,24 @@ void bigint_sub(bigint_t * const res,
 }
 
 static inline
+void bigint_mul_ui(bigint_t * const res,
+                   const bigint_t * const m1, const unsigned int m2)
+{
+    mpz_mul_ui(*res, *m1, m2);
+}
+
+static inline
 void bigint_pow_ui(bigint_t * const res,
                    const bigint_t * const base, const unsigned int exp)
 {
     mpz_pow_ui(*res, *base, exp);
+}
+
+static inline
+void bigint_div_ui(bigint_t * const q, unsigned int * const r,
+                   const bigint_t * const n, const unsigned int d)
+{
+    *r = mpz_tdiv_q_ui(*q, *n, d);
 }
 
 static inline
