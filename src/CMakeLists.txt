@@ -13,18 +13,18 @@ function(strip_target TARGET)
 endfunction(strip_target)
 
 # c static library
-# add_library(
-#   ubiqfpe-static
-#   STATIC
-#   $<TARGET_OBJECTS:c_objects>)
-# set_target_properties(
-#   ubiqfpe-static
-#   PROPERTIES
-#   OUTPUT_NAME ubiqfpe)
-# target_include_directories(
-#   ubiqfpe-static
-#   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-# strip_target(ubiqfpe-static)
+add_library(
+  ubiqfpe-static
+  STATIC
+  $<TARGET_OBJECTS:c_objects>)
+set_target_properties(
+  ubiqfpe-static
+  PROPERTIES
+  OUTPUT_NAME ubiqfpe)
+target_include_directories(
+  ubiqfpe-static
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+strip_target(ubiqfpe-static)
 
 add_library(
   ubiqfpe
@@ -47,4 +47,16 @@ else()
     m
     crypto
     gmp)
+endif()
+target_include_directories(
+  ubiqfpe-static
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(WIN32)
+  target_link_libraries(
+    ubiqfpe
+    ws2_32 userenv bcrypt crypt32)
+else()
+  target_link_libraries(
+    ubiqfpe-static
+    crypto gmp)
 endif()

@@ -13,7 +13,23 @@ target_link_libraries(
   unittests
   gtest gtest_main ubiqfpe)
 
+add_executable(
+  unittests-static
+
+  bn.cpp
+  ff1.cpp
+  ff3_1.cpp
+  ffx.cpp)
+
+target_link_libraries(
+  unittests-static
+  gtest gtest_main ubiqfpe-static)
+
+
 add_custom_target(
   test
   COMMAND unittests
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  COMMAND unittests-static
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})  
+
+
