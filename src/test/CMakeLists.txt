@@ -11,7 +11,7 @@ add_executable(
   ffx.cpp)
 target_link_libraries(
   unittests
-  gtest gtest_main ubiqfpe)
+  gtest gtest_main ubiqfpe unistring)
 
 add_executable(
   unittests-static
@@ -23,13 +23,11 @@ add_executable(
 
 target_link_libraries(
   unittests-static
-  gtest gtest_main ubiqfpe-static)
+  gtest gtest_main ubiqfpe-static unistring)
 
 
 add_custom_target(
   test
   COMMAND unittests
   COMMAND unittests-static
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})  
-
-
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

@@ -3,6 +3,7 @@
 
 #include <sys/cdefs.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include <gmp.h>
 
@@ -32,6 +33,9 @@ void bigint_set_ui(bigint_t * const x, const unsigned int n)
 int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha);
 
+int __u32_bigint_set_str(bigint_t * const x,
+                    const uint32_t * const str, const uint32_t * const alpha);
+
 static inline
 int bigint_set_str(bigint_t * const x,
                    const char * const str, const unsigned int radix)
@@ -41,6 +45,9 @@ int bigint_set_str(bigint_t * const x,
 
 int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const x);
+
+int __u32_bigint_get_str(uint32_t * const str, const size_t len,
+                    const uint32_t * const alpha, const bigint_t * const x);
 
 static inline
 int bigint_get_str(char * const str, const size_t len,
