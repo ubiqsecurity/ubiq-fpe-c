@@ -73,14 +73,13 @@ void __radix_test(const char * const input, const char * const ialpha,
       EXPECT_EQ(u32_output[i], expect[i]);
     }
 
-//    EXPECT_EQ(std::string(output), expect);
-
     free(u32_input);
     free(u32_ialpha);
     free(u32_oalpha);
     free(u32_expect);
 
     bigint_deinit(&n);
+    bigint_deinit(&n2);
 }
 
 static
