@@ -19,7 +19,6 @@ void ff1_test(const uint8_t * const K, const size_t k,
     EXPECT_EQ(res, 0);
     if (res == 0) {
         EXPECT_EQ(ff1_encrypt(ctx, out, PT, NULL, 0), 0);
-        printf("out \n%s\n", out);
         EXPECT_EQ(strcmp(out, CT), 0);
 
         EXPECT_EQ(ff1_decrypt(ctx, out, CT, NULL, 0), 0);

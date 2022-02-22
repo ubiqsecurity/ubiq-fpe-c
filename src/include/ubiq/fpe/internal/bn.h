@@ -30,9 +30,6 @@ void bigint_set_ui(bigint_t * const x, const unsigned int n)
     mpz_set_ui(*x, n);
 }
 
-int __bigint_set_str(bigint_t * const x,
-                     const char * const str, const char * const alpha);
-
 int __u32_bigint_set_str(bigint_t * const x,
                     const uint32_t * const str, const uint32_t * const alpha);
 
@@ -42,9 +39,6 @@ int bigint_set_str(bigint_t * const x,
 {
     return mpz_set_str(*x, str, radix);
 }
-
-int __bigint_get_str(char * const str, const size_t len,
-                     const char * const alpha, const bigint_t * const x);
 
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                     const uint32_t * const alpha, const bigint_t * const x);

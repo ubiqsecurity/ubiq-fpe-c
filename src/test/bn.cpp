@@ -27,12 +27,10 @@ static
 void __radix_test(const char * const input, const char * const ialpha,
                   const char * const oalpha, const char * const expect)
 {
-    bigint_t n, n2;
-    bigint_t n32;
-    int r1, r2, r3, r4;
+    bigint_t n;
+    int r1, r2;
 
-    std::string output;
-    std::vector<uint32_t> u32_output;
+    std::vector<uint32_t> output;
 
     uint32_t * u32_input = (uint32_t *)calloc(strlen(input) + 1, sizeof(uint32_t));
     uint32_t * u32_ialpha = (uint32_t *)calloc(strlen(ialpha) + 1, sizeof(uint32_t));
@@ -46,31 +44,18 @@ void __radix_test(const char * const input, const char * const ialpha,
 
     /* @n will be the numerical value of @inp */
     bigint_init(&n);
-    bigint_init(&n2);
 
-    r1 = __bigint_set_str(&n, input, ialpha);
-    r3 = __u32_bigint_set_str(&n2, u32_input, u32_ialpha);
+    r1 = __u32_bigint_set_str(&n, u32_input, u32_ialpha);
     ASSERT_EQ(r1, 0);
-    ASSERT_EQ(r3, 0);
-    ASSERT_EQ(mpz_cmp(n, n2), 0);
 
-    r1 = __bigint_get_str(nullptr, 0, oalpha, &n);
-    r3 = __u32_bigint_get_str(nullptr, 0, u32_oalpha, &n2);
+    r1 = __u32_bigint_get_str(nullptr, 0, u32_oalpha, &n);
     ASSERT_GT(r1, 0);
-    ASSERT_GT(r3, 0);
     output.resize(r1);
-    u32_output.resize(r3);
-    ASSERT_EQ(r1, r3);
 
-    r2 = __bigint_get_str((char *)output.data(), r1, oalpha, &n);
+    r2 = __u32_bigint_get_str(output.data(), r1, u32_oalpha, &n);
     EXPECT_EQ(r1, r2);
-    EXPECT_EQ(std::string(output), expect);
-
-    r4 = __u32_bigint_get_str(u32_output.data(), r3, u32_oalpha, &n2);
-    EXPECT_EQ(r3, r4);
-    for (int i=0; i < output.length(); i++) {
-      EXPECT_EQ(u32_output[i], u32_expect[i]);
-      EXPECT_EQ(u32_output[i], expect[i]);
+    for (int i=0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], u32_expect[i]);
     }
 
     free(u32_input);
@@ -79,7 +64,6 @@ void __radix_test(const char * const input, const char * const ialpha,
     free(u32_expect);
 
     bigint_deinit(&n);
-    bigint_deinit(&n2);
 }
 
 static
