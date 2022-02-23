@@ -15,6 +15,10 @@ __BEGIN_DECLS
 
 uint8_t * ffx_revb(uint8_t * const dst,
                    const uint8_t * const src, const size_t len);
+
+uint32_t * ffx_revu32(uint32_t * const dst,
+                  const uint32_t * const src, const size_t len);
+
 static inline
 char * ffx_revs(char * const dst, const char * const src)
 {

@@ -22,7 +22,8 @@ build:
     before_script:
         - apt -y update
         - apt -y install cmake gcc g++
-        - apt -y install libgmp-dev libssl-dev
+        - apt -y install libgmp-dev libssl-dev 
+        - apt -y install libunistring-dev
     script:
         - cmake -S. -Bbuild
         - cmake --build build --target all -- -j$(nproc)

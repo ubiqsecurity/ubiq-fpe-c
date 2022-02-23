@@ -27,6 +27,11 @@ if(WIN32)
 
     wincrypt.c)
 else()
+  target_link_libraries(
+  c_objects
+  unistring)
+
+
   # target_sources(
   #   c_objects
 

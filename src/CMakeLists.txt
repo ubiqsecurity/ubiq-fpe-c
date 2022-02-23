@@ -46,7 +46,8 @@ else()
     ubiqfpe
     m
     crypto
-    gmp)
+    gmp
+    unistring)
 endif()
 target_include_directories(
   ubiqfpe-static
@@ -58,5 +59,5 @@ if(WIN32)
 else()
   target_link_libraries(
     ubiqfpe-static
-    crypto gmp)
+    crypto gmp unistring)
 endif()

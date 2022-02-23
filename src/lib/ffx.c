@@ -147,6 +147,29 @@ uint8_t * ffx_revb(uint8_t * const dst,
     return dst;
 }
 
+uint32_t * ffx_revu32(uint32_t * const dst,
+                   const uint32_t * const src, const size_t len)
+{
+    size_t i;
+
+    for (i = 0; i < len / 2; i++) {
+        const uint32_t t = src[i];
+        dst[i] = src[(len - 1) - i];
+        dst[(len - 1)- i] = t;
+    }
+
+    /*
+     * if length is odd, there will be a byte in the
+     * middle untouched by the loop above
+     */
+    if (len % 2) {
+        dst[i] = src[i];
+    }
+
+    return dst;
+}
+
+
 /*
  * convert a (big) integer, @n, to a string in the radix, @r,
  * with a length, @m. The caller must supply the space pointed

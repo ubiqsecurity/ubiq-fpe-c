@@ -2,6 +2,7 @@
 #include <ubiq/fpe/internal/ffx.h>
 
 #include <string.h>
+#include <unistr.h>
 
 /*
  * Convert a numerical value in a given alphabet to a number
@@ -25,10 +26,10 @@
  *
  * The function returns 0 or a negative error number
  */
-int __bigint_set_str(bigint_t * const x,
-                     const char * const str, const char * const alpha)
+int __u32_bigint_set_str(bigint_t * const x,
+                     const uint32_t * const str, const uint32_t * const alpha)
 {
-    const int len = strlen(str);
+    const int len = u32_strlen(str);
 
     /*
      * the alphabet can be anything and doesn't have
@@ -38,7 +39,7 @@ int __bigint_set_str(bigint_t * const x,
      * undertaking, so it is assumed. as such, the radix
      * is simply the number of characters in the alphabet.
      */
-    const int rad = strlen(alpha);
+    const int rad = u32_strlen(alpha);
 
     bigint_t m, a;
     int i, err;
@@ -61,14 +62,14 @@ int __bigint_set_str(bigint_t * const x,
 
     err = 0;
     for (i = 0; i < len; i++) {
-        const char * pos;
+        const uint32_t * pos;
 
         /*
          * determine index/position in the alphabet.
          * if the character is not present the input
          * is not valid.
          */
-        pos = strchr(alpha, str[len - 1 - i]);
+        pos = u32_strchr(alpha, str[len - 1 - i]);
         if (!pos) {
             err = -EINVAL;
             break;
@@ -97,10 +98,10 @@ int __bigint_set_str(bigint_t * const x,
  * is never written. In short, success is determined by the return value
  * being less than or equal to @len.
  */
-int __bigint_get_str(char * const str, const size_t len,
-                     const char * const alpha, const bigint_t * const _x)
+int __u32_bigint_get_str(uint32_t * const str, const size_t len,
+                   const uint32_t * const alpha, const bigint_t * const _x)
 {
-    const int rad = strlen(alpha);
+    const int rad = u32_strlen(alpha);
 
     bigint_t x;
     int i;
@@ -143,7 +144,7 @@ int __bigint_get_str(char * const str, const size_t len,
          * the output digits are stored in reverse order.
          * reverse the final value so that the output is correct
          */
-        ffx_revb(str, str, i);
+        ffx_revu32(str, str, i);
     }
 
     bigint_deinit(&x);

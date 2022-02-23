@@ -17,6 +17,12 @@ TEST(bn, set_str)
     bigint_deinit(&n);
 }
 
+static void _copy(uint32_t * u32_dest, const char * const src) {
+  for (int i = 0; i < strlen(src); i++) {
+    u32_dest[i] = (uint8_t)src[i];
+  }
+}
+
 static
 void __radix_test(const char * const input, const char * const ialpha,
                   const char * const oalpha, const char * const expect)
@@ -24,21 +30,38 @@ void __radix_test(const char * const input, const char * const ialpha,
     bigint_t n;
     int r1, r2;
 
-    std::string output;
+    std::vector<uint32_t> output;
+
+    uint32_t * u32_input = (uint32_t *)calloc(strlen(input) + 1, sizeof(uint32_t));
+    uint32_t * u32_ialpha = (uint32_t *)calloc(strlen(ialpha) + 1, sizeof(uint32_t));
+    uint32_t * u32_oalpha = (uint32_t *)calloc(strlen(oalpha) + 1, sizeof(uint32_t));
+    uint32_t * u32_expect = (uint32_t *)calloc(strlen(expect) + 1, sizeof(uint32_t));
+
+    _copy(u32_input, input);
+    _copy(u32_ialpha, ialpha);
+    _copy(u32_oalpha, oalpha);
+    _copy(u32_expect, expect);
 
     /* @n will be the numerical value of @inp */
     bigint_init(&n);
 
-    r1 = __bigint_set_str(&n, input, ialpha);
+    r1 = __u32_bigint_set_str(&n, u32_input, u32_ialpha);
     ASSERT_EQ(r1, 0);
 
-    r1 = __bigint_get_str(nullptr, 0, oalpha, &n);
+    r1 = __u32_bigint_get_str(nullptr, 0, u32_oalpha, &n);
     ASSERT_GT(r1, 0);
     output.resize(r1);
 
-    r2 = __bigint_get_str((char *)output.data(), r1, oalpha, &n);
+    r2 = __u32_bigint_get_str(output.data(), r1, u32_oalpha, &n);
     EXPECT_EQ(r1, r2);
-    EXPECT_EQ(std::string(output), expect);
+    for (int i=0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], u32_expect[i]);
+    }
+
+    free(u32_input);
+    free(u32_ialpha);
+    free(u32_oalpha);
+    free(u32_expect);
 
     bigint_deinit(&n);
 }
