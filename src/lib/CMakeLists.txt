@@ -20,24 +20,14 @@ if(WIN32)
     _CRT_SECURE_NO_WARNINGS
     strdup=_strdup
     strcasecmp=_stricmp)
-  target_sources(
-    c_objects
-
-    PRIVATE
-
-    wincrypt.c)
 else()
   target_link_libraries(
-  c_objects
-  unistring)
-
-
-  # target_sources(
-  #   c_objects
-
-  #   PRIVATE
-
-  #   openssl.c)
+    c_objects
+    unistring)
+  target_compile_options(
+    c_objects
+    PUBLIC
+    -O2)
 endif()
 
 target_include_directories(
