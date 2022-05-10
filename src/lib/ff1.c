@@ -69,12 +69,12 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         size_t len;
     } scratch;
 
-    char * A, * B, * C;
+    char * A, * B;
     uint8_t * P, * Q, * R;
 
     unsigned int q;
 
-    bigint_t y, c;
+    bigint_t nA, nB, y;
 
     /* use the default tweak when none is supplied */
     if (T == NULL) {
@@ -94,16 +94,15 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     /* the number of bytes in Q */
     q = ((t + b + 1 + 15) / 16) * 16;
 
-    bigint_init(&y);
-    bigint_init(&c);
-
-    scratch.len = 3 * (v + 2) + p + q + r;
+    scratch.len = 2 * (v + 2) + p + q + r;
     scratch.buf = malloc(scratch.len);
     if (!scratch.buf) {
-        bigint_deinit(&c);
-        bigint_deinit(&y);
         return -ENOMEM;
     }
+
+    bigint_init(&nA);
+    bigint_init(&nB);
+    bigint_init(&y);
 
     /*
      * P, Q, and R at the front so that they are all 16-byte
@@ -115,7 +114,6 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     R = Q + q;
     A = R + r;
     B = A + v + 2;
-    C = B + v + 2;
 
     /* Step 2 */
     if (encrypt) {
@@ -145,6 +143,15 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     memcpy(Q, T, t);
     memset(Q + t, 0, q - (t + b + 1));
 
+    /*
+     * internally, we treat the string A and B as
+     * big integers for the duration of the algorithm.
+     * this speeds things up by avoiding having to
+     * convert back and forth.
+     */
+    bigint_set_str(&nA, A, ctx->ffx.radix);
+    bigint_set_str(&nB, B, ctx->ffx.radix);
+
     for (unsigned int i = 0; i < 10; i++) {
         /* Step 6v */
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
@@ -161,8 +168,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
          * as a byte array representation and store
          * it into @Q
          */
-        bigint_set_str(&c, B, ctx->ffx.radix);
-        numb = bigint_export(&c, &numc);
+        numb = bigint_export(&nB, &numc);
         if (b <= numc) {
             memcpy(&Q[q - b], numb, b);
         } else {
@@ -203,45 +209,52 @@ int ff1_cipher(struct ff1_ctx * const ctx,
          * create an integer from @A in the given radix.
          * set @c to A +/- y
          */
-        bigint_set_str(&c, A, ctx->ffx.radix);
         if (encrypt) {
-            bigint_add(&c, &c, &y);
+            bigint_add(&y, &nA, &y);
         } else {
-            bigint_sub(&c, &c, &y);
+            bigint_sub(&y, &nA, &y);
         }
+        /* Step 6viii */
+        bigint_swap(&nA, &nB);
+
         /* set @y to radix**m */
-        bigint_set_ui(&y, ctx->ffx.radix);
-        bigint_pow_ui(&y, &y, m);
+        bigint_set_ui(&nB, ctx->ffx.radix);
+        bigint_pow_ui(&nB, &nB, m);
+
+        /* Step 6ix, skipped Step 6vii */
         /* c = (A +/- y) mod radix**m */
-        bigint_mod(&c, &c, &y);
+        bigint_mod(&nB, &y, &nB);
 
-        /* Step 6vii */
-        ffx_str(C, v + 2, m, ctx->ffx.radix, &c);
+        /*
+         * the code above avoids converting the result
+         * of the big integer math back to a string and
+         * instead leaves it as a big integer. this
+         * obviates the need for Step 6vii and also
+         * allows us to combine the math with Step 6ix
+         * and store the result of the big integer math
+         * directly into nB as a big integer.
+         */
+    }
 
-        {
-            char * const tmp = A;
-            /* Step 6viii */
-            A = B;
-            /* Step 6ix */
-            B = C;
-            C = tmp;
-        }
+    /* convert the big integers back to strings */
+    if (encrypt) {
+        ffx_str(A, v + 2, u, ctx->ffx.radix, &nA);
+        ffx_str(B, v + 2, v, ctx->ffx.radix, &nB);
+    } else {
+        ffx_str(B, v + 2, v, ctx->ffx.radix, &nA);
+        ffx_str(A, v + 2, u, ctx->ffx.radix, &nB);
     }
 
     /* Step 7 */
-    if (encrypt) {
-        strcpy(Y, A);
-        strcat(Y, B);
-    } else {
-        strcpy(Y, B);
-        strcat(Y, A);
-    }
+    strcpy(Y, A);
+    strcat(Y, B);
 
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);
 
-    bigint_deinit(&c);
     bigint_deinit(&y);
+    bigint_deinit(&nB);
+    bigint_deinit(&nA);
 
     return 0;
 }

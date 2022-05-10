@@ -25,6 +25,12 @@ void bigint_deinit(bigint_t * const x)
 }
 
 static inline
+void bigint_swap(bigint_t * const x, bigint_t * const y)
+{
+    mpz_swap(*x, *y);
+}
+
+static inline
 void bigint_set_ui(bigint_t * const x, const unsigned int n)
 {
     mpz_set_ui(*x, n);
