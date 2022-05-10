@@ -30,18 +30,22 @@ int ff3_1_ctx_create(struct ff3_1_ctx ** const ctx,
 
     res = -EINVAL;
     if (twkbuf) {
-        res = ffx_ctx_create(
-            (void **)ctx,
-            sizeof(struct ff3_1_ctx), offsetof(struct ff3_1_ctx, ffx),
-            keybuf, keylen,
-            twkbuf, 7,
-            maxtxtlen,
-            7, 7,
-            radix);
-        if (res == 0) {
-            /* the key used in ff3-1 is the reverse of the given key */
-            ffx_revb((*ctx)->ffx.key.buf,
-                     (*ctx)->ffx.key.buf, (*ctx)->ffx.key.len);
+        uint8_t * const kb = malloc(keylen);
+
+        res = -ENOMEM;
+        if (kb) {
+            ffx_revb(kb, keybuf, keylen);
+
+            res = ffx_ctx_create(
+                (void **)ctx,
+                sizeof(struct ff3_1_ctx), offsetof(struct ff3_1_ctx, ffx),
+                kb, keylen,
+                twkbuf, 7,
+                maxtxtlen,
+                7, 7,
+                radix);
+
+            free(kb);
         }
     }
 

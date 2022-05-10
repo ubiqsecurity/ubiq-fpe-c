@@ -48,7 +48,7 @@ struct ffx_ctx
     struct {
         uint8_t * buf;
         size_t len;
-    } key, twk;
+    } twk;
 };
 
 int ffx_prf(struct ffx_ctx * const ctx,
