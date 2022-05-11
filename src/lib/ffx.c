@@ -223,16 +223,23 @@ void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len)
 {
-    while (len) {
-        *(uint8_t *)d = *(uint8_t *)s1 ^ *(uint8_t *)s2;
+#define MEMXOR(TYPE, DST, S1, S2, BYTES)                        \
+    do {                                                        \
+        if ((((uintptr_t)(DST) |                                \
+              (uintptr_t)(S1) |                                 \
+              (uintptr_t)(S2)) & (sizeof(TYPE) - 1)) == 0) {    \
+            while (BYTES >= sizeof(TYPE)) {                     \
+                *(TYPE *)(DST) = *(TYPE *)(S1) ^ *(TYPE *)(S2); \
+                (DST) = (TYPE *)(DST) + 1;                      \
+                (S1) = (TYPE *)(S1) + 1;                        \
+                (S2) = (TYPE *)(S2) + 1;                        \
+                (BYTES) -= sizeof(TYPE);                        \
+            }                                                   \
+        }                                                       \
+    } while (0)
 
-        d = (uint8_t *)d + 1;
-
-        s1 = (uint8_t *)s1 + 1;
-        s2 = (uint8_t *)s2 + 1;
-
-        len--;
-    }
+    MEMXOR(uint64_t, d, s1, s2, len);
+    MEMXOR(uint8_t, d, s1, s2, len);
 
     return d;
 }
