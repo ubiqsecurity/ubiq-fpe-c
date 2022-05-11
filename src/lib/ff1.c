@@ -163,10 +163,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         Q[q - b - 1] = encrypt ? i : (9 - i);
 
         /*
-         * convert the numeral string indicated by @B
-         * to an integer and then export that integer
-         * as a byte array representation and store
-         * it into @Q
+         * export the integer representing the string @B as
+         * a byte array representation and store it into @Q
          */
         numb = bigint_export(&nB, &numc);
         if (b <= numc) {
