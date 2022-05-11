@@ -79,8 +79,14 @@ int __u32_bigint_set_str(bigint_t * const x,
          * multiply the digit into the correct position
          * and add it to the result
          */
-        bigint_mul_ui(&a, &m, pos - alpha);
-        bigint_add(x, x, &a);
+        if (pos != alpha) {
+            if (pos - alpha == 1) {
+                bigint_add(x, x, &m);
+            } else {
+                bigint_mul_ui(&a, &m, pos - alpha);
+                bigint_add(x, x, &a);
+            }
+        }
 
         bigint_mul_ui(&m, &m, rad);
     }
