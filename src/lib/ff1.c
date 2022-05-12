@@ -35,6 +35,29 @@ int ff1_ctx_create(struct ff1_ctx ** const ctx,
         radix);
 }
 
+int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
+                   const uint8_t * const keybuf, const size_t keylen,
+                   const uint8_t * const twkbuf, const size_t twklen,
+                   const size_t mintwklen, const size_t maxtwklen,
+                   const char * const custom_radix_str) 
+{
+    const size_t maxtxtlen =
+        sizeof(maxtxtlen) <= 4 ? SIZE_MAX : ((size_t)1 << 32);
+
+    return ffx_ctx_create_custom_radix_str(
+        (void **)ctx,
+        sizeof(struct ff1_ctx), offsetof(struct ff1_ctx, ffx),
+        keybuf, keylen,
+        twkbuf, twklen,
+        maxtxtlen,
+        mintwklen, maxtwklen,
+        custom_radix_str);
+
+}
+
+
+
+
 void ff1_ctx_destroy(struct ff1_ctx * const ctx)
 {
     ffx_ctx_destroy((void *)ctx, offsetof(struct ff1_ctx, ffx));

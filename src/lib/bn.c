@@ -157,3 +157,222 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 
     return i;
 }
+
+/*
+ * Convert a numerical value in a given alphabet to a number
+ *
+ * An alphabet consists of single-byte symbols in which each
+ * symbol represents the numerical value associated with its
+ * index/position in the alphabet. for example, consider the
+ * alphabet:
+ *   !@#$%^&*()
+ * In this alphabet ! occupies index 0 and is therefore
+ * assigned that value. @ = 1, # = 2, etc. Furthermore, the
+ * alphabet contains 10 characters, so that becomes the radix
+ * of the input. Using the alphabet above, an input of @$#
+ * translates to a value of 132 (one hundred thirty-two,
+ * decimal).
+ *
+ * If the alphabet above were instead:
+ *   !@#$%^&*
+ * The radix would be 8 and an input of @$# translates to a
+ * value of 90 (ninety, decimal).
+ *
+ * The function returns 0 or a negative error number
+ */
+int __bigint_set_str(bigint_t * const x,
+                     const char * const str, const char * const alpha)
+{
+  int err = 0;
+
+    const size_t rad = strlen(alpha);
+    if (rad <= 62) {
+        // Cannot make any assumption about the alpha character set.  Assume that the 
+        // character set does NOT match the expected bignum values.
+        size_t len = strlen(str);
+        char * mapped = malloc(len + 1);
+        if (mapped == NULL) {
+            err = -ENOMEM;
+        } else {
+            mapped[len] = '\0';
+            err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
+            if (!err) {
+                err = bigint_set_str(x, mapped, rad);
+            }
+
+        }
+        free(mapped);
+    } else {
+    const int len = strlen(str);
+
+    /*
+    * the alphabet can be anything and doesn't have
+    * to be in a recognized canonical order. the only
+    * requirement is that every value in the list be
+    * unique. checking that constraint is an expensive
+    * undertaking, so it is assumed. as such, the radix
+    * is simply the number of characters in the alphabet.
+    */
+    // const int rad = strlen(alpha);
+
+    bigint_t m, a;
+    int i;
+
+    /* @n will be the numerical value of @str */
+    bigint_set_ui(x, 0);
+
+    /*
+    * @m is a multiplier used to multiply each digit
+    * of the input into its correct position in @n
+    */
+    bigint_init(&m);
+    bigint_set_ui(&m, 1);
+
+    /*
+    * @a is a temporary value used
+    * to add each digit into @n
+    */
+    bigint_init(&a);
+
+    for (i = 0; i < len; i++) {
+        const char * pos;
+
+        /*
+         * determine index/position in the alphabet.
+         * if the character is not present the input
+         * is not valid.
+         */
+        pos = strchr(alpha, str[len - 1 - i]);
+        if (!pos) {
+            err = -EINVAL;
+            break;
+        }
+
+        /*
+         * multiply the digit into the correct position
+         * and add it to the result
+         */
+        bigint_mul_ui(&a, &m, pos - alpha);
+        bigint_add(x, x, &a);
+
+        bigint_mul_ui(&m, &m, rad);
+    }
+
+    bigint_deinit(&a);
+    bigint_deinit(&m);
+  }
+  return err;
+}
+
+
+/*
+ * This function returns the number of bytes (that would have been)
+ * written to the output string (if the length of the available space
+ * is sufficient). not including a nul terminator. A nul terminator
+ * is never written. In short, success is determined by the return value
+ * being less than or equal to @len.
+ */
+int __bigint_get_str(char * const str, const size_t len,
+                     const char * const alpha, const bigint_t * const _x)
+{
+
+  static const char * csu = "__bigint_get_str";
+  int debug = 0;
+  int i;
+  const size_t rad = strlen(alpha);
+
+  (debug) && printf("DEBUG %s rad(%d)\n", csu, rad);
+
+  if (rad <= 62) {
+
+    (debug) && printf("DEBUG %s len(%d)\n", csu, len);
+    (debug) && printf("DEBUG %s alpha(%s)\n", csu, alpha);
+    i = bigint_get_str(str, len, rad, _x);
+    if (!i) {
+      i = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
+    }
+
+    (debug) && printf("DEBUG %s i(%d)\n", csu, i);
+    (debug) && printf("DEBUG %s s(%s)\n", csu, str);
+  } else {
+
+    bigint_t x;
+
+    /*
+     * to convert the numerical value, repeatedly
+     * divide (storing the result and the remainder)
+     * @n by the desired radix of the output.
+     *
+     * the remainder is the current digit; the result
+     * of the division becomes the input to the next
+     * iteration
+     */
+
+    bigint_init(&x);
+    bigint_mul_ui(&x, _x, 1);
+    i = 0;
+
+    while (bigint_cmp_si(&x, 0) != 0) {
+        int r;
+
+        bigint_div_ui(&x, &r, &x, rad);
+        if (i < len) {
+            str[i] = alpha[r];
+        }
+        i++;
+    }
+
+    /* handle the case where the initial value was 0 */
+    if (!i) {
+        if (i < len) {
+            str[i] = alpha[0];
+        }
+        i++;
+    }
+
+    if (i <= len) {
+        /*
+         * to simplify conversion from a number to a string,
+         * the output digits are stored in reverse order.
+         * reverse the final value so that the output is correct
+         */
+        ffx_revb(str, str, i);
+    }
+    (debug) && printf("DEBUG %s s(%s)\n", csu, str);
+
+    bigint_deinit(&x);
+  }
+  (debug) && printf("DEBUG %s ret(%d)\n", csu, i);
+  return i;
+}
+
+/* dst already exists and has null terminator */
+
+int map_characters(char * const dst, const char * const src,
+    const char * const src_chars,
+    const char * const dst_chars) 
+{
+    size_t len = strlen(src);
+    for (int i = 0; i < len; i++) {
+        char * pos = strchr(src_chars, src[i]);
+        if (!pos) {
+            return -EINVAL;
+        }
+        dst[i] = dst_chars[pos - src_chars];
+    }
+    return 0;
+}
+
+const char * get_standard_bignum_radix(
+    const size_t radix) {
+    static const char radix36[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    static const char radix62[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    if (radix <= 36) {
+        return radix36;
+    }
+    if (radix <= 62) {
+        return radix62;
+    }
+    return NULL;
+}

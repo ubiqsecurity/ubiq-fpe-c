@@ -42,6 +42,9 @@ struct ffx_ctx
     EVP_CIPHER_CTX * evp;
 
     unsigned int radix;
+    char * custom_radix_str; // Radix character set - Not null if custom radix string is supplied.
+    // It is possible to have a custom radix string with a normally standard radix size (10,36,62, etc).
+    // If the custom radix string is not null, need to perform string mapping regardless of radix value
     struct {
         size_t min, max;
     } txtlen, twklen;
@@ -63,6 +66,15 @@ int ffx_ctx_create(void ** const _ctx,
                    const size_t maxtxtlen,
                    const size_t mintwklen, const size_t maxtwklen,
                    const unsigned int radix);
+
+int ffx_ctx_create_custom_radix_str(void ** const _ctx,
+    const size_t len, const size_t off,
+    const uint8_t * const keybuf, const size_t keylen,
+    const uint8_t * const twkbuf, const size_t twklen,
+    const size_t maxtxtlen,
+    const size_t mintwklen, const size_t maxtwklen,
+    const char * const custom_radix_str);
+
 void ffx_ctx_destroy(void * const ctx, const size_t off);
 
 __END_DECLS

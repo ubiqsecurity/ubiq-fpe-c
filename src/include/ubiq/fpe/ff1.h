@@ -38,6 +38,12 @@ int ff1_ctx_create(struct ff1_ctx ** const ctx,
                    const size_t mintwklen, const size_t maxtwklen,
                    const unsigned int radix);
 
+int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
+                   const uint8_t * const keybuf, const size_t keylen,
+                   const uint8_t * const twkbuf, const size_t twklen,
+                   const size_t mintwklen, const size_t maxtwklen,
+                   const char * const custom_radix_str);
+
 /*
  * Encrypt data using the FF1 algorithm
  *

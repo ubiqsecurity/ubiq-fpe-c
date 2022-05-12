@@ -24,7 +24,7 @@ static void _copy(uint32_t * u32_dest, const char * const src) {
 }
 
 static
-void __radix_test(const char * const input, const char * const ialpha,
+void __u32_radix_test(const char * const input, const char * const ialpha,
                   const char * const oalpha, const char * const expect)
 {
     bigint_t n;
@@ -67,6 +67,32 @@ void __radix_test(const char * const input, const char * const ialpha,
 }
 
 static
+void __radix_test(const char * const input, const char * const ialpha,
+                  const char * const oalpha, const char * const expect)
+{
+    bigint_t n;
+    int r1, r2;
+
+    std::vector<char> output;
+
+    /* @n will be the numerical value of @inp */
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, input, ialpha);
+    ASSERT_EQ(r1, 0);
+
+    output.resize(50);
+
+    r2 = __bigint_get_str(output.data(), output.size(), oalpha, &n);
+    EXPECT_EQ(r2, 0);
+    EXPECT_EQ(strcmp(output.data(), expect), 0);
+
+
+    bigint_deinit(&n);
+}
+
+
+static
 void radix_test(const char * const input, const char * const ialpha,
                 const char * const oalpha, const char * const expect)
 {
@@ -74,6 +100,12 @@ void radix_test(const char * const input, const char * const ialpha,
     __radix_test(input, ialpha, oalpha, expect);
     /* test that the conversion can be successfully reversed */
     __radix_test(expect, oalpha, ialpha, input);
+
+
+    /* convert from one radix to another */
+    __u32_radix_test(input, ialpha, oalpha, expect);
+    /* test that the conversion can be successfully reversed */
+    __u32_radix_test(expect, oalpha, ialpha, input);
 }
 
 TEST(radix, dec2hex)
@@ -94,4 +126,114 @@ TEST(radix, dec2dec)
 TEST(radix, oct2dec)
 {
     radix_test("@$#", "!@#$%^&*", "0123456789", "90");
+}
+
+
+TEST(chars, mapset)
+{
+    int r1;
+
+    char src[]      = "BCDEFGHIJ";
+    char expected[] = "123456789";
+
+    const char input_set[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char output_set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char * dst1;
+    char * dst2;
+
+    dst1 = strdup(src);
+    r1 = map_characters(dst1,src,input_set, output_set);
+    ASSERT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst1, expected),0) << " dst1 = '" << dst1 << "'";
+
+    dst2 = strdup(dst1);
+    r1 = map_characters(dst2, dst1, output_set, input_set);
+    ASSERT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst2, src),0);
+
+    free(dst1);
+    free(dst2);
+
+}
+
+TEST(chars, mapset_2)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "JIHGFEDCBABCDEFGHIJ";
+    char expected[] = "9876543210123456789";
+
+    const char input_set[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char output_set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char * dst1;
+    char * dst2;
+
+    dst1 = strdup(src);
+
+    r1 = map_characters(dst1,src,input_set, output_set);
+    ASSERT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst1, expected),0) << " dst1 = '" << dst1 << "'";
+
+    dst2 = strdup(dst1);
+    r1 = map_characters(dst2, dst1, output_set, input_set);
+    ASSERT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst2, src),0);
+
+    free(dst1);
+    free(dst2);
+
+}
+
+
+
+TEST(chars, non_std)
+{
+    unsigned long long r1 = 0;
+
+    char src[] = "!@#$%^&*()";
+    char expected[] = "02468ACEGI";
+
+    const char input_set[] =  "!a@b#c$d%e^f&g*h(i)";
+    const char output_set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char * dst1;
+    char * dst2;
+
+    dst1 = strdup(src);
+    ASSERT_EQ(map_characters(dst1,src,input_set, output_set), 0);
+
+    EXPECT_EQ(strcmp(dst1, expected),0) << " dst1 = '" << dst1 << "'";
+
+    dst2 = strdup(dst1);
+    r1 = map_characters(dst2, dst1, output_set, input_set);
+    ASSERT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst2, src),0);
+
+    free(dst1);
+    free(dst2);
+
+
+}
+
+TEST(chars, mapset_invalid)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "JIHGFEDCBABCDEFGHIJ";
+    char expected[] = "9876543210123456789";
+
+    const char input_set[] = "BCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char output_set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char * dst1;
+
+    dst1 = strdup(src);
+
+    r1 = map_characters(dst1,src,input_set, output_set);
+    EXPECT_NE(r1, 0);
+
+    free(dst1);
+
 }

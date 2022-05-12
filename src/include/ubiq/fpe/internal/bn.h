@@ -46,6 +46,9 @@ int bigint_set_str(bigint_t * const x,
     return mpz_set_str(*x, str, radix);
 }
 
+int __bigint_set_str(bigint_t * const x,
+                     const char * const str, const char * const alpha);
+
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                     const uint32_t * const alpha, const bigint_t * const x);
 
@@ -65,6 +68,9 @@ int bigint_get_str(char * const str, const size_t len,
 
     return res;
 }
+
+int __bigint_get_str(char * const str, const size_t len,
+                     const char * const alpha, const bigint_t * const x);
 
 static inline
 void * bigint_export(const bigint_t * const x, size_t * const count)
@@ -132,6 +138,16 @@ void bigint_mod(bigint_t * const res,
 {
     mpz_mod(*res, *num, *den);
 }
+
+int map_characters(
+    char * const dst, 
+    const char * const src,
+    const char * const src_chars,
+    const char * const dst_chars);
+
+const char * get_standard_bignum_radix(
+    const size_t radix);
+
 
 __END_DECLS
 

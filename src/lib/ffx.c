@@ -86,6 +86,7 @@ int ffx_ctx_create(void ** const _ctx,
             static const uint8_t IV[16] = { 0 };
 
             ctx->radix = radix;
+            ctx->custom_radix_str = NULL;
 
             ctx->txtlen.min = mintxtlen;
             ctx->txtlen.max = maxtxtlen;
@@ -113,10 +114,29 @@ int ffx_ctx_create(void ** const _ctx,
     return 0;
 }
 
+int ffx_ctx_create_custom_radix_str(void ** const _ctx,
+                   const size_t len, const size_t off,
+                   const uint8_t * const keybuf, const size_t keylen,
+                   const uint8_t * const twkbuf, const size_t twklen,
+                   const size_t maxtxtlen,
+                   const size_t mintwklen, const size_t maxtwklen,
+                   const char * const custom_radix_str) 
+{
+    int x = ffx_ctx_create(_ctx, len, off,keybuf, keylen, twkbuf,twklen,maxtxtlen, mintwklen, maxtwklen, strlen(custom_radix_str));
+    if (!x) {
+        struct ffx_ctx * ctx = (void *)((uint8_t *)*_ctx + off);
+        ctx->custom_radix_str = strdup(custom_radix_str);
+    }
+    return x;
+}
+
 void ffx_ctx_destroy(void * const _ctx, const size_t off)
 {
     struct ffx_ctx * const ctx = (void *)((uint8_t *)_ctx + off);
     EVP_CIPHER_CTX_free(ctx->evp);
+    if (ctx->custom_radix_str) {
+        free(ctx->custom_radix_str);
+    }
     free(_ctx);
 }
 
@@ -291,6 +311,8 @@ int ffx_prf(struct ffx_ctx * const ctx,
 
     return 0;
 }
+
+
 
 /*
  * perform an aes-ecb encryption of @src using the supplied @ctx.
