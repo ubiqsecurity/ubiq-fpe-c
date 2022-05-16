@@ -76,6 +76,23 @@ TEST(ff1, nist1)
     ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
 }
 
+TEST(ff1, nist1_custom_radix)
+{
+    const uint8_t K[] = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+    };
+
+    const uint8_t T[] = {};
+
+    // Radix moved characters one higher (to right one character)
+    const char PT[] = "1234567890";
+    const char CT[] = "3544588595";
+    const char radix[] = "1234567890";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
 TEST(ff1, nist2)
 {
     const uint8_t K[] = {
@@ -92,6 +109,24 @@ TEST(ff1, nist2)
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
     ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
+}
+
+TEST(ff1, nist2_custom_radix)
+{
+    const uint8_t K[] = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+    };
+
+    const uint8_t T[] = {
+        0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30,
+    };
+
+    const char PT[] = "2345678901";
+    const char CT[] = "8346422995";
+    const char radix[] = "2345678901";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
 }
 
 TEST(ff1, nist3)

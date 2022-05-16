@@ -244,7 +244,7 @@ int ffx_str_custom_radix(char * const str, const size_t len,
 
             if (len < m) {
                 memmove(str + (m - len), str, len + 1);
-                memset(str, '0', m - len);
+                memset(str, radix_str[0], m - len);
             } else if (len > m) {
                 res = -EOVERFLOW;
             }

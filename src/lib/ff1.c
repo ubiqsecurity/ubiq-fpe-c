@@ -182,6 +182,10 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         bigint_set_str(&nA, A, ctx->ffx.radix);
         bigint_set_str(&nB, B, ctx->ffx.radix);
     }
+
+    gmp_printf("nA (%Zd)\n", nA);
+    gmp_printf("nB (%Zd)\n", nB);
+
     for (unsigned int i = 0; i < 10; i++) {
         /* Step 6v */
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
@@ -266,6 +270,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     /* convert the big integers back to strings */
     if (encrypt) {
+        gmp_printf("encrypt nA (%Zd)\n", nA);
+        gmp_printf("encrypt nB (%Zd)\n", nB);
         if (ctx->ffx.custom_radix_str != NULL)  {
             ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nA);
             ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nB);
@@ -273,7 +279,11 @@ int ff1_cipher(struct ff1_ctx * const ctx,
             ffx_str(A, v + 2, u, ctx->ffx.radix, &nA);
             ffx_str(B, v + 2, v, ctx->ffx.radix, &nB);
         }
+        printf("encrypt A (%s)\n", A);
+        printf("encrypt B (%s)\n", B);
     } else {
+        gmp_printf("decrypt nA (%Zd)\n", nA);
+        gmp_printf("decrypt nB (%Zd)\n", nB);
         if (ctx->ffx.custom_radix_str != NULL)  {
             ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nA);
             ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nB);
@@ -281,6 +291,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
             ffx_str(B, v + 2, v, ctx->ffx.radix, &nA);
             ffx_str(A, v + 2, u, ctx->ffx.radix, &nB);
         }
+        printf("decrypt A (%s)\n", A);
+        printf("decrypt B (%s)\n", B);
     }
 
     /* Step 7 */
