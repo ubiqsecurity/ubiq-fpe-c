@@ -322,6 +322,49 @@ TEST(chars, mapset_invalid)
 
 }
 
+TEST(radix, t1)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "1234567890ABCDEFabcdef";
+    const char i_radix[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const char o_radix[] = "0123456789";
+    char expect[] = "45117932320280791338835719979215890389";
+
+    std::vector<char> data(50);
+  
+   radix_test(src, i_radix, o_radix, expect);
+}
+
+TEST(radix, t2)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "3456789AB2CDEFGHcdefgh";
+    const char i_radix[] = "23456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01";
+    const char o_radix[] = "0123456789";
+    char expect[] = "45117932320280791338835719979215890389";
+
+    std::vector<char> data(50);
+  
+   radix_test(src, i_radix, o_radix, expect);
+}
+
+TEST(radix, t3)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "6KNFyZss7SBQ7w7udUwsv8";
+    const char i_radix[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const char o_radix[] = "23456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01";
+    char expect[] = "8MPH0buu9UDS9y9wfWyuxA";
+
+    std::vector<char> data(50);
+  
+   radix_test(src, i_radix, o_radix, expect);
+}
+
+
 #ifdef NODEF
 TEST(radix, negative)
 {
