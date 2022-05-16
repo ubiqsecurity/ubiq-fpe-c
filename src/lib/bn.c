@@ -368,9 +368,13 @@ int map_characters(char * const dst, const char * const src,
 
 const char * get_standard_bignum_radix(
     const size_t radix) {
+    static const char radix10[] = "0123456789";
     static const char radix36[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     static const char radix62[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+    if (radix <= 10) {
+        return radix10;
+    }
     if (radix <= 36) {
         return radix36;
     }

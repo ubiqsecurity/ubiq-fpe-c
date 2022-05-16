@@ -171,10 +171,17 @@ int ff1_cipher(struct ff1_ctx * const ctx,
      * big integers for the duration of the algorithm.
      * this speeds things up by avoiding having to
      * convert back and forth.
+     * 
+     * If the ctx was created with a custom radix string, then use is custom radix
+     * information to convert to a bigint
      */
-    bigint_set_str(&nA, A, ctx->ffx.radix);
-    bigint_set_str(&nB, B, ctx->ffx.radix);
-
+    if (ctx->ffx.custom_radix_str != NULL)  {
+        __bigint_set_str(&nA, A, ctx->ffx.custom_radix_str);
+        __bigint_set_str(&nB, B, ctx->ffx.custom_radix_str);
+    } else {
+        bigint_set_str(&nA, A, ctx->ffx.radix);
+        bigint_set_str(&nB, B, ctx->ffx.radix);
+    }
     for (unsigned int i = 0; i < 10; i++) {
         /* Step 6v */
         const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
@@ -259,11 +266,21 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     /* convert the big integers back to strings */
     if (encrypt) {
-        ffx_str(A, v + 2, u, ctx->ffx.radix, &nA);
-        ffx_str(B, v + 2, v, ctx->ffx.radix, &nB);
+        if (ctx->ffx.custom_radix_str != NULL)  {
+            ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nA);
+            ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nB);
+        } else {
+            ffx_str(A, v + 2, u, ctx->ffx.radix, &nA);
+            ffx_str(B, v + 2, v, ctx->ffx.radix, &nB);
+        }
     } else {
-        ffx_str(B, v + 2, v, ctx->ffx.radix, &nA);
-        ffx_str(A, v + 2, u, ctx->ffx.radix, &nB);
+        if (ctx->ffx.custom_radix_str != NULL)  {
+            ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nA);
+            ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nB);
+        } else {
+            ffx_str(B, v + 2, v, ctx->ffx.radix, &nA);
+            ffx_str(A, v + 2, u, ctx->ffx.radix, &nB);
+        }
     }
 
     /* Step 7 */

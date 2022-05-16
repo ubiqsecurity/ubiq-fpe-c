@@ -32,6 +32,9 @@ char * ffx_revs(char * const dst, const char * const src)
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r, const bigint_t * n);
 
+int ffx_str_custom_radix(char * const str, const size_t len,
+            const unsigned int m, const char * const radix_str , const bigint_t * n);
+
 void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len);

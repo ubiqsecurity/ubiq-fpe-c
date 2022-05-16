@@ -229,6 +229,31 @@ int ffx_str(char * const str, const size_t len,
     return res;
 }
 
+int ffx_str_custom_radix(char * const str, const size_t len,
+            const unsigned int m, 
+            const char * const radix_str ,
+            const bigint_t * const n)
+{
+    int res;
+
+    res = -EINVAL;
+    if (bigint_cmp_si(n, 0) >= 0) {
+        res = __bigint_get_str(str, len, radix_str, n);
+        if (res == 0) {
+            const size_t len = strlen(str);
+
+            if (len < m) {
+                memmove(str + (m - len), str, len + 1);
+                memset(str, '0', m - len);
+            } else if (len > m) {
+                res = -EOVERFLOW;
+            }
+        }
+    }
+
+    return res;
+}
+
 /*
  * perform a byte-wise exclusive-or operation over the sequence
  * of bytes pointed to by @s1 and @s2, storing the result into @d.
