@@ -69,6 +69,10 @@ int bigint_get_str(char * const str, const size_t len,
     return res;
 }
 
+// Allow getting the string value of a big number where the string does not 
+// conform to the standards for bignum, 0-9, a-z, A-Z.
+// Returns 0 or -ENOMEM if len is not big enough.
+// str and len MUST account for null terminator
 int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const x);
 

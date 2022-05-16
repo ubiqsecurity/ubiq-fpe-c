@@ -74,18 +74,20 @@ void __radix_test(const char * const input, const char * const ialpha,
     int r1, r2;
 
     std::vector<char> output;
+    output.resize(50);
 
     /* @n will be the numerical value of @inp */
     bigint_init(&n);
 
+    // std::cerr << " input(" << input << ")   expect(" << expect << ")"<< std::endl;
+    // std::cerr << " ialpha(" << ialpha << ")   oalpha(" << oalpha << ")"<< std::endl;
     r1 = __bigint_set_str(&n, input, ialpha);
     ASSERT_EQ(r1, 0);
 
-    output.resize(50);
 
     r2 = __bigint_get_str(output.data(), output.size(), oalpha, &n);
-    EXPECT_EQ(r2, 0);
-    EXPECT_EQ(strcmp(output.data(), expect), 0);
+    EXPECT_EQ(r2, 0) ;
+    EXPECT_EQ(strcmp(output.data(), expect), 0) << " output(" << output.data() << ")   expect(" << expect << ")"<< std::endl;
 
 
     bigint_deinit(&n);
@@ -128,6 +130,88 @@ TEST(radix, oct2dec)
     radix_test("@$#", "!@#$%^&*", "0123456789", "90");
 }
 
+TEST(radix, invalid_dest_buffer)
+{
+    bigint_t n;
+    int r1(0);
+    int r2(0);
+    const char data []= "123456789";
+    const char input_radix [] = "0123456789";
+    const char output_radix [] = "0123456789ABC";
+    std::vector<char> output;
+
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, data, input_radix);
+    ASSERT_EQ(r1, 0);
+
+    output.resize(50);
+
+    // Make sure dest buffer is TOO small
+    r2 = __bigint_get_str(output.data(), 1, output_radix, &n);
+    EXPECT_EQ(r2, -ENOMEM);
+
+    bigint_deinit(&n);
+}
+
+TEST(radix, invalid_characters_buffer)
+{
+    bigint_t n;
+    int r1(0);
+    const char data []= "123456789";
+    const char input_radix [] = "ABCDEFG";
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, data, input_radix);
+    ASSERT_EQ(r1, -EINVAL);
+
+  
+    bigint_deinit(&n);
+}
+
+// Use arbitrary radix 62 and test conversions back and forth
+TEST(radix, radix62)
+{
+    char data [5] = "\0\0\0\0";
+    std::vector<char> input_radix;
+    const char output_radix [] = "0123456879";
+
+    input_radix.resize(62);
+
+    // Arbitrary input string
+    for (int i = 0;i < input_radix.size(); i++) {
+        input_radix[i] = '0' + i;
+    }
+
+    data[0] = input_radix[1];
+    radix_test(data, input_radix.data(), output_radix, "1");
+
+    data[0] = input_radix.back();
+    radix_test(data, input_radix.data(), output_radix, "61");
+
+}
+
+// Use arbitrary radix > 62 and test conversions back and forth
+TEST(radix, radix63)
+{
+    char data [5] = "\0\0\0\0";
+    std::vector<char> input_radix;
+    const char output_radix [] = "0123456879";
+
+    input_radix.resize(63);
+
+    for (int i = 0;i < input_radix.size(); i++) {
+        input_radix[i] = '0' + i;
+    }
+
+    data[0] = input_radix[1];
+    radix_test(data, input_radix.data(), output_radix, "1");
+
+    data[0] = input_radix.back();
+    radix_test(data, input_radix.data(), output_radix, "62");
+
+}
 
 TEST(chars, mapset)
 {
@@ -237,3 +321,58 @@ TEST(chars, mapset_invalid)
     free(dst1);
 
 }
+
+#ifdef NODEF
+TEST(radix, negative)
+{
+    bigint_t n;
+    bigint_t den;
+    int r1(0);
+    int r2(0);
+    int r3(0);
+    std::vector<char> output;
+
+    const char numerator []= "-14103068008475998766";
+    const char denominator []= "10000";
+    const char input_radix [] = "0123456789";
+    bigint_init(&n);
+    bigint_init(&den);
+
+    r1 = bigint_set_str(&n, numerator, 10);
+    ASSERT_EQ(r1, 0);
+
+    r1 = bigint_set_str(&den, denominator, 10);
+    ASSERT_EQ(r1, 0);
+
+    output.resize(50);
+
+    r2 = bigint_get_str(output.data(), output.size(), 10, &n);
+    EXPECT_EQ(r2, 0);
+//    EXPECT_EQ(strcmp(output.data(), data), 0);
+
+    r2 = bigint_get_str(output.data(), output.size(), 10, &den);
+    EXPECT_EQ(r2, 0);
+    EXPECT_EQ(strcmp(output.data(), denominator), 0);
+
+    bigint_mod(&n, &n, &den);
+    EXPECT_EQ(r3, 0);
+    
+    r2 = bigint_get_str(output.data(), output.size(), 10, &n);
+    EXPECT_EQ(r2, 0);
+    std::cout << output.data() << std::endl;
+
+    bigint_deinit(&n);
+    bigint_deinit(&den);
+}
+
+TEST(radix, negative2)
+{
+    int num = -100;
+    int den = 98;
+
+    int r = num % den;
+
+    std::cout << r << std::endl;
+
+}
+#endif

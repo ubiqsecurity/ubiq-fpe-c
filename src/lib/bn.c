@@ -98,11 +98,9 @@ int __u32_bigint_set_str(bigint_t * const x,
 }
 
 /*
- * This function returns the number of bytes (that would have been)
- * written to the output string (if the length of the available space
- * is sufficient). not including a nul terminator. A nul terminator
- * is never written. In short, success is determined by the return value
- * being less than or equal to @len.
+ * This function requires str to be pre-allocated and LEN to be large enough
+ * to include null terminator.
+ * Will return 0 on success and < 0 if there is an error
  */
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                    const uint32_t * const alpha, const bigint_t * const _x)
@@ -280,6 +278,7 @@ int __bigint_get_str(char * const str, const size_t len,
   int debug = 0;
   int i;
   const size_t rad = strlen(alpha);
+  int err = 0;
 
   (debug) && printf("DEBUG %s rad(%d)\n", csu, rad);
 
@@ -287,9 +286,9 @@ int __bigint_get_str(char * const str, const size_t len,
 
     (debug) && printf("DEBUG %s len(%d)\n", csu, len);
     (debug) && printf("DEBUG %s alpha(%s)\n", csu, alpha);
-    i = bigint_get_str(str, len, rad, _x);
-    if (!i) {
-      i = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
+    err = bigint_get_str(str, len, rad, _x);
+    if (!err) {
+      err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
     }
 
     (debug) && printf("DEBUG %s i(%d)\n", csu, i);
@@ -343,7 +342,11 @@ int __bigint_get_str(char * const str, const size_t len,
     bigint_deinit(&x);
   }
   (debug) && printf("DEBUG %s ret(%d)\n", csu, i);
-  return i;
+  if (i > len) {
+      err = -ENOMEM;
+  }
+  return err;
+
 }
 
 /* dst already exists and has null terminator */
