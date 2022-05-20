@@ -41,10 +41,28 @@ int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
                    const size_t mintwklen, const size_t maxtwklen,
                    const char * const custom_radix_str) 
 {
+    int res = 0;
     const size_t maxtxtlen =
         sizeof(maxtxtlen) <= 4 ? SIZE_MAX : ((size_t)1 << 32);
 
-    return ffx_ctx_create_custom_radix_str(
+    // Test the radix string to determine if it matches natively supported 
+    // radix lengths.  If so, simply use the standard radix length, not the
+    // string.
+
+    size_t radix_len = strlen(custom_radix_str);
+    const char * bignum_radix_str = get_standard_bignum_radix(radix_len);
+
+    if (bignum_radix_str != NULL && strncmp(bignum_radix_str, custom_radix_str, radix_len) == 0) {
+        res = ffx_ctx_create(
+        (void **)ctx,
+        sizeof(struct ff1_ctx), offsetof(struct ff1_ctx, ffx),
+        keybuf, keylen,
+        twkbuf, twklen,
+        maxtxtlen,
+        mintwklen, maxtwklen,
+        radix_len);
+    } else {
+        res = ffx_ctx_create_custom_radix_str(
         (void **)ctx,
         sizeof(struct ff1_ctx), offsetof(struct ff1_ctx, ffx),
         keybuf, keylen,
@@ -52,7 +70,8 @@ int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
         maxtxtlen,
         mintwklen, maxtwklen,
         custom_radix_str);
-
+    }
+    return res;
 }
 
 
