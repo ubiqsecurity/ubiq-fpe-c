@@ -74,7 +74,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     unsigned int q;
 
-    bigint_t nA, nB, y;
+    bigint_t nA, nB, y, mU, mV;
 
     /* use the default tweak when none is supplied */
     if (T == NULL) {
@@ -103,6 +103,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     bigint_init(&nA);
     bigint_init(&nB);
     bigint_init(&y);
+    bigint_init(&mU);
+    bigint_init(&mV);
 
     /*
      * P, Q, and R at the front so that they are all 16-byte
@@ -152,9 +154,17 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     bigint_set_str(&nA, A, ctx->ffx.radix);
     bigint_set_str(&nB, B, ctx->ffx.radix);
 
+    /* calculate radix**u and radix**v for use in the loop */
+    bigint_set_ui(&mU, ctx->ffx.radix);
+    bigint_pow_ui(&mU, &mU, u);
+    bigint_mul_ui(&mV, &mU, 1);
+    if (u != v) {
+        bigint_mul_ui(&mV, &mV, ctx->ffx.radix);
+    }
+
     for (unsigned int i = 0; i < 10; i++) {
         /* Step 6v */
-        const unsigned int m = ((i + !!encrypt) % 2) ? u : v;
+        bigint_t * const mX = ((i + !!encrypt) % 2) ? &mU : &mV;
 
         uint8_t * numb;
         size_t numc;
@@ -215,13 +225,9 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         /* Step 6viii */
         bigint_swap(&nA, &nB);
 
-        /* set @y to radix**m */
-        bigint_set_ui(&nB, ctx->ffx.radix);
-        bigint_pow_ui(&nB, &nB, m);
-
         /* Step 6ix, skipped Step 6vii */
         /* c = (A +/- y) mod radix**m */
-        bigint_mod(&nB, &y, &nB);
+        bigint_mod(&nB, &y, mX);
 
         /*
          * the code above avoids converting the result
@@ -250,6 +256,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);
 
+    bigint_deinit(&mV);
+    bigint_deinit(&mU);
     bigint_deinit(&y);
     bigint_deinit(&nB);
     bigint_deinit(&nA);
