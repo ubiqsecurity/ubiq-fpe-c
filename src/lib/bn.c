@@ -276,7 +276,7 @@ int __bigint_get_str(char * const str, const size_t len,
 
   static const char * csu = "__bigint_get_str";
   int debug = 0;
-  int i;
+  int i = 0;
   const size_t rad = strlen(alpha);
   int err = 0;
 
