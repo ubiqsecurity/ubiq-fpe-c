@@ -196,14 +196,13 @@ int ff1_cipher(struct ff1_ctx * const ctx,
          * of ciph(R ^ 1), ciph(R ^ 2), ...
          */
         for (unsigned int j = 1; j < r / 16; j++) {
-            const unsigned int l = j * 16;
+            unsigned int * const rP =
+                (unsigned int *)&R[16 - sizeof(unsigned int)];
+            const unsigned int w = htonl(j);
 
-            memset(&R[l], 0, 16 - sizeof(j));
-            *(unsigned int *)&R[l + (16 - sizeof(j))] = htonl(j);
-
-            ffx_memxor(&R[l], &R[0], &R[l], 16);
-
-            ffx_ciph(&ctx->ffx, &R[l], &R[l]);
+            *rP ^= w;
+            ffx_ciph(&ctx->ffx, &R[j * 16], &R[0]);
+            *rP ^= w;
         }
 
         /*
