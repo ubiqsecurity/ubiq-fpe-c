@@ -365,6 +365,28 @@ TEST(radix, t3)
 }
 
 
+TEST(radix, t4)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "9G0L29YNJ6";
+    const char i_radix[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char o_radix[] = "!\"#$%'()*+,./0123456789:<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz{}~";
+
+    char expect[] = "=J*K42c(";
+
+    std::vector<char> data(50);
+  
+    printf("radix %d\n", strlen(o_radix));
+
+   radix_test(src, i_radix, o_radix, expect);
+
+   radix_test(expect, o_radix, i_radix, src);
+
+}
+
+
 #ifdef NODEF
 TEST(radix, negative)
 {

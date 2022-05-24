@@ -181,21 +181,29 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha)
 {
+  static const char * csu = "__bigint_set_str";
+  int debug = 0;
   int err = 0;
+
+  (debug) && printf("START DEBUG %s str(%s)   alpha(%s)\n", csu, str, alpha);
+
 
     const size_t rad = strlen(alpha);
     if (rad <= 62) {
         // Cannot make any assumption about the alpha character set.  Assume that the 
         // character set does NOT match the expected bignum values.
         size_t len = strlen(str);
-        char * mapped = malloc(len + 1);
+        char * mapped = calloc(len + 1, sizeof(char));
         if (mapped == NULL) {
             err = -ENOMEM;
         } else {
             mapped[len] = '\0';
+            (debug) && printf("%s set_str (%s)\n", csu, str);
             err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
+            (debug) && printf(" %s mapped (%s)\n", csu, mapped);
             if (!err) {
                 err = bigint_set_str(x, mapped, rad);
+                (debug) && gmp_printf("%s x %Zd\n", csu, x);
             }
 
         }
@@ -259,6 +267,7 @@ int __bigint_set_str(bigint_t * const x,
     bigint_deinit(&a);
     bigint_deinit(&m);
   }
+  (debug) && printf("END DEBUG %s err(%d)\n\n", csu, err);
   return err;
 }
 
@@ -280,15 +289,18 @@ int __bigint_get_str(char * const str, const size_t len,
   const size_t rad = strlen(alpha);
   int err = 0;
 
-  (debug) && printf("DEBUG %s rad(%d)\n", csu, rad);
+  (debug) && printf("START DEBUG %s rad(%d)\n", csu, rad);
 
   if (rad <= 62) {
 
     (debug) && printf("DEBUG %s len(%d)\n", csu, len);
     (debug) && printf("DEBUG %s alpha(%s)\n", csu, alpha);
     err = bigint_get_str(str, len, rad, _x);
+    (debug) && gmp_printf("__bigint_get_str   _x %Zd\n", _x);
     if (!err) {
+      (debug) && printf("__bigint_get_str  str BEFORE(%s)\n", str);
       err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
+      (debug) && printf("__bigint_get_str  str  AFTER(%s)\n", str);
     }
 
     (debug) && printf("DEBUG %s i(%d)\n", csu, i);
@@ -328,7 +340,8 @@ int __bigint_get_str(char * const str, const size_t len,
         }
         i++;
     }
-
+    // Make sure to set null terminator
+    str[i] = '\0';
     if (i <= len) {
         /*
          * to simplify conversion from a number to a string,
@@ -345,6 +358,7 @@ int __bigint_get_str(char * const str, const size_t len,
   if (i > len) {
       err = -ENOMEM;
   }
+  (debug) && printf("END DEBUG %s i(%d)  err(%d)\n\n", csu, i, err);
   return err;
 
 }
@@ -355,10 +369,15 @@ int map_characters(char * const dst, const char * const src,
     const char * const src_chars,
     const char * const dst_chars) 
 {
+    int debug = 0;
+
+    (debug) && printf("src_chars (%s) len(%d)\n", src_chars, strlen(src_chars));
+
     size_t len = strlen(src);
     for (int i = 0; i < len; i++) {
         char * pos = strchr(src_chars, src[i]);
         if (!pos) {
+            (debug) && printf("Unable to find %c \n", src[i]);
             return -EINVAL;
         }
         dst[i] = dst_chars[pos - src_chars];
