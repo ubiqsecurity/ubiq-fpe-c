@@ -126,7 +126,9 @@ int ffx_ctx_create_custom_radix_str(void ** const _ctx,
                    const size_t mintwklen, const size_t maxtwklen,
                    const char * const custom_radix_str) 
 {
+    // Get the number of bytes in the custom radix string
     size_t radix_len = strlen(custom_radix_str);
+    // Get the number of UTF8 characters in the custom radix string
     size_t radix_u8_mbsnlen = u8_mbsnlen(custom_radix_str, radix_len);
 
     int x = ffx_ctx_create(_ctx, len, off,keybuf, keylen, twkbuf,twklen,maxtxtlen, mintwklen, maxtwklen, radix_u8_mbsnlen);

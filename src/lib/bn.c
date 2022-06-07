@@ -111,6 +111,9 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 
   printf("__u32_bigint_get_str len(%d) rad(%d) alpha(%S) \n",len, rad, alpha);
    
+   if (str == NULL) {
+       return -EINVAL;
+   }
 
     bigint_t x;
     int i;
