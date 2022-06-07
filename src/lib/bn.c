@@ -3,6 +3,8 @@
 
 #include <string.h>
 #include <unistr.h>
+#include <uniwidth.h>
+#include <wchar.h>
 
 /*
  * Convert a numerical value in a given alphabet to a number
@@ -107,8 +109,12 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 {
     const int rad = u32_strlen(alpha);
 
+  printf("__u32_bigint_get_str len(%d) rad(%d) alpha(%S) \n",len, rad, alpha);
+   
+
     bigint_t x;
     int i;
+    int err = 0;
 
     /*
      * to convert the numerical value, repeatedly
@@ -142,18 +148,23 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
         i++;
     }
 
+    // Make sure to set null terminator
+    str[i] = '\0';
+     wprintf(L"__u32_bigint_get_str str(%S)\n",str);
     if (i <= len) {
         /*
-         * to simplify conversion from a number to a string,
+         * to simplify conversion from a numbers to a string,
          * the output digits are stored in reverse order.
          * reverse the final value so that the output is correct
          */
         ffx_revu32(str, str, i);
+    } else {
+        err = -ENOMEM;
     }
 
     bigint_deinit(&x);
 
-    return i;
+    return err;
 }
 
 /*

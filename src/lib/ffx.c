@@ -1,6 +1,9 @@
 #include <ubiq/fpe/internal/ffx.h>
 
 #include <math.h>
+#include <unistr.h>
+#include <uniwidth.h>
+#include <wchar.h>
 
 /*
  * This function is intended to be used to create a context for
@@ -87,6 +90,7 @@ int ffx_ctx_create(void ** const _ctx,
 
             ctx->radix = radix;
             ctx->custom_radix_str = NULL;
+            ctx->u32_custom_radix_str = NULL;
 
             ctx->txtlen.min = mintxtlen;
             ctx->txtlen.max = maxtxtlen;
@@ -122,12 +126,30 @@ int ffx_ctx_create_custom_radix_str(void ** const _ctx,
                    const size_t mintwklen, const size_t maxtwklen,
                    const char * const custom_radix_str) 
 {
-    int x = ffx_ctx_create(_ctx, len, off,keybuf, keylen, twkbuf,twklen,maxtxtlen, mintwklen, maxtwklen, strlen(custom_radix_str));
+    size_t radix_len = strlen(custom_radix_str);
+    size_t radix_u8_mbsnlen = u8_mbsnlen(custom_radix_str, radix_len);
+
+    int x = ffx_ctx_create(_ctx, len, off,keybuf, keylen, twkbuf,twklen,maxtxtlen, mintwklen, maxtwklen, radix_u8_mbsnlen);
     if (!x) {
         struct ffx_ctx * ctx = (void *)((uint8_t *)*_ctx + off);
-        ctx->custom_radix_str = strdup(custom_radix_str);
+
+        // If the radix string contains multibyte values, then create the u32_version
+        // else simply use the custom radix string.
+        if (radix_len == radix_u8_mbsnlen) {
+            ctx->custom_radix_str = strdup(custom_radix_str);
+            ctx->u32_custom_radix_str = NULL;
+        } else {
+            uint32_t * tmp = NULL;
+            size_t lengthp = 0;
+            ctx->custom_radix_str = NULL;
+            tmp = u8_to_u32(custom_radix_str, u8_strlen(custom_radix_str) + 1, NULL, &lengthp);
+            if (tmp != NULL) {
+                ctx->u32_custom_radix_str = tmp;
+            }
+        }
     }
     return x;
+
 }
 
 void ffx_ctx_destroy(void * const _ctx, const size_t off)
@@ -136,6 +158,9 @@ void ffx_ctx_destroy(void * const _ctx, const size_t off)
     EVP_CIPHER_CTX_free(ctx->evp);
     if (ctx->custom_radix_str) {
         free(ctx->custom_radix_str);
+    }
+    if (ctx->u32_custom_radix_str) {
+        free(ctx->u32_custom_radix_str);
     }
     free(_ctx);
 }
@@ -250,6 +275,53 @@ int ffx_str_custom_radix(char * const str, const size_t len,
             }
         }
     }
+
+    return res;
+}
+
+// Len is size of buffer in bytes
+// m is number of characters or multibyte characters
+int ffx_str_u32_custom_radix(char * const str, const size_t len,
+            const unsigned int m, 
+            const uint32_t * const u32_radix_str ,
+            const bigint_t * const n)
+{
+    int res;
+
+    uint32_t * u32_str = calloc(len + 1, sizeof(uint32_t));
+
+    res = -EINVAL;
+    if (bigint_cmp_si(n, 0) >= 0) {
+        res = __u32_bigint_get_str(u32_str, len, u32_radix_str, n);
+        if (res == 0) {
+//            printf("str(%s)\n",str);
+            printf("u32_str(%S)\n",u32_str);
+            const size_t u32_len = u32_strlen(u32_str);
+                printf("m(%d) u32_len(%d) len(%d)\n", m, u32_len, len);
+
+            if (u32_len <= m) {
+                size_t result_len = len;
+
+                // Leading padding needed?
+                if (u32_len < m) {
+                    wmemmove(u32_str + (m - u32_len), u32_str, u32_len + 1);
+                    wmemset(u32_str, u32_radix_str[0], m - u32_len);
+                }
+                printf("after  u32_str(%S)\n", u32_str);
+                // If the provided length is not long enough, allocates a new string and sets returned size.
+                // In that case, it is an error and need to make sure to free new string.
+                char * tmp = u32_to_u8(u32_str, m + 1, str, &result_len);
+                printf("tmp(%s) str(%s) result_len(%d)\n", (tmp == NULL) ? "NUL" : tmp, str, result_len);
+                if (result_len > len) {
+                    res = -EOVERFLOW;
+                    free(tmp);
+                }
+            } else if (len > m) {
+                res = -EOVERFLOW;
+            }
+        }
+    }
+    free(u32_str);
 
     return res;
 }

@@ -35,9 +35,15 @@ int ffx_str(char * const str, const size_t len,
 int ffx_str_custom_radix(char * const str, const size_t len,
             const unsigned int m, const char * const radix_str , const bigint_t * n);
 
+int ffx_str_u32_custom_radix(char * const str, const size_t len,
+            const unsigned int m, 
+            const uint32_t * const u32_radix_str ,
+            const bigint_t * const n);
+            
 void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len);
+
 
 struct ffx_ctx
 {
@@ -48,6 +54,7 @@ struct ffx_ctx
     char * custom_radix_str; // Radix character set - Not null if custom radix string is supplied.
     // It is possible to have a custom radix string with a normally standard radix size (10,36,62, etc).
     // If the custom radix string is not null, need to perform string mapping regardless of radix value
+    uint32_t * u32_custom_radix_str; // Only used in the custom radix string contains multibyte characters.
     struct {
         size_t min, max;
     } txtlen, twklen;

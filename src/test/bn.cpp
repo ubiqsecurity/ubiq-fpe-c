@@ -386,6 +386,192 @@ TEST(radix, t4)
 
 }
 
+TEST(radix, u32)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"0123456789";
+
+    const wchar_t expect[] = L"1234567890";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
+
+TEST(radix, u32_b)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"0123456789";
+
+    const wchar_t expect[] = L"1234567890";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
+
+TEST(radix, u32_c)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"ÊËÌÍÎÏðñòó";
+
+    const wchar_t expect[] = L"ËÌÍÎÏðñòóÊ";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
+
+TEST(radix, u32_d)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
+
+    const wchar_t expect[] = L"ĶķĸĹϺϻϼϽϾĵ";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
+
+TEST(radix, u32_e)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
+
+    const wchar_t expect[] = L"ĶķĸĹϺϻϼϽϾĵ";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
+
+TEST(radix, u32_f)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
+
+    const wchar_t expect[] = L"ĶķĸĹϺϻϼϽϾĵ";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), 2,  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, -ENOMEM);
+
+}
+
+TEST(radix, u32_g)
+{
+    unsigned long long r1 = 0;
+    // char src[]      = "959223218629794";
+    //  const char i_radix[] = "0123456789";
+    char src[]      = "1234567890";
+    const char i_radix[] = "0123456789";
+    const wchar_t o_radix[] = L"012345678Ͼ";
+
+    const wchar_t expect[] = L"12345678Ͼ0";
+
+    std::vector<wchar_t> data(50);
+  
+    bigint_t n;
+
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, src, i_radix);
+    EXPECT_EQ(r1, 0);
+
+    r1 = __u32_bigint_get_str((uint32_t *)data.data(), data.size(),  (uint32_t *)o_radix, &n);
+    EXPECT_EQ(r1, 0);
+
+    EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+
+}
 
 #ifdef NODEF
 TEST(radix, negative)
