@@ -50,6 +50,7 @@ int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
     // string.
 
     size_t radix_len = strlen(custom_radix_str);
+
     const char * bignum_radix_str = get_standard_bignum_radix(radix_len);
 
     if (bignum_radix_str != NULL && strncmp(bignum_radix_str, custom_radix_str, radix_len) == 0) {
@@ -290,27 +291,37 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     }
 
     /* convert the big integers back to strings */
+    // Optimized out Step 7 but going directly back to the buffer Y.  Needed 
+    // to change order of a couple operations due to null terminator 
+    // when re-assembling data
+
     if (encrypt) {
         if (ctx->ffx.custom_radix_str != NULL)  {
-            ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nA);
-            ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nB);
+            ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nA);
+            ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nB);
+        } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
+            ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nA);
+            ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nB);
         } else {
-            ffx_str(A, v + 2, u, ctx->ffx.radix, &nA);
-            ffx_str(B, v + 2, v, ctx->ffx.radix, &nB);
+            ffx_str(Y, v + 2, u, ctx->ffx.radix, &nA);
+            ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nB);
         }
     } else {
         if (ctx->ffx.custom_radix_str != NULL)  {
-            ffx_str_custom_radix(B, v + 2, v, ctx->ffx.custom_radix_str, &nA);
-            ffx_str_custom_radix(A, v + 2, u, ctx->ffx.custom_radix_str, &nB);
+            ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nB);
+            ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nA);
+        } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
+            ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nB);
+            ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nA);
         } else {
-            ffx_str(B, v + 2, v, ctx->ffx.radix, &nA);
-            ffx_str(A, v + 2, u, ctx->ffx.radix, &nB);
+            ffx_str(Y, v + 2, u, ctx->ffx.radix, &nB);
+            ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nA);
         }
     }
 
     /* Step 7 */
-    strcpy(Y, A);
-    strcat(Y, B);
+    // strcpy(Y, A);
+    // strcat(Y, B);
 
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);

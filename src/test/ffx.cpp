@@ -77,13 +77,17 @@ TEST(ffx, ffx_str_u32_custom_radix)
 {
     char s[5];
     bigint_t n;
+    const uint32_t * radix = (uint32_t*)L"0123456789ab";
+    const char * expected = u8"03a7";
+    const char str[] = "0559";
 
     bigint_init(&n);
-    bigint_set_str(&n, "559", 10);
+    bigint_set_str(&n, str, 10);
 
     s[0] = '\0';
-    EXPECT_EQ(ffx_str_u32_custom_radix(s, 5, 4, (uint32_t*)L"0123456789ab", &n), 0);
-    EXPECT_EQ(strcmp(s, "03a7"), 0) << s ;
+    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)), radix, &n), 0);
+    EXPECT_EQ(strcmp(s, expected), 0) << s ;
+    EXPECT_EQ(u8_mbsnlen((uint8_t*)str, strlen(str)), u8_mbsnlen((uint8_t*)s, strlen(s)));
 
     bigint_deinit(&n);
 }
@@ -93,6 +97,8 @@ TEST(ffx, ffx_str_u32_custom_radix_2)
     setlocale(LC_ALL, "C.UTF-8");
     const char str[] = "1234567890";
     char s[30];
+    const uint32_t * radix = (uint32_t*)L"ĵĶķĸĹϺϻϼϽϾ";
+    const char * expected = u8"ĶķĸĹϺϻϼϽϾĵ";
     // const char * u8 = u8"1Ķ2Ķ3";//ĵĶķĸ";// ĵĶķĸĹϺϻϼϽϾ";
     // uint32_t * u32_radix = (uint32_t*)calloc(50, sizeof(uint32_t));
     // size_t len = 50;
@@ -120,8 +126,9 @@ TEST(ffx, ffx_str_u32_custom_radix_2)
     bigint_set_str(&n, str, 10);
     s[0] = '\0';
 // printf("sizeof(s) - %d\n", sizeof(s));
-    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)), (uint32_t*)L"ĵĶķĸĹϺϻϼϽϾ", &n), 0);
-    EXPECT_EQ(strcmp(s, u8"ĶķĸĹϺϻϼϽϾĵ"), 0) << s ;
+    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)), radix, &n), 0);
+    EXPECT_EQ(strcmp(s, expected), 0) << s ;
+    EXPECT_EQ(u8_mbsnlen((uint8_t*)str, strlen(str)), u8_mbsnlen((uint8_t*)s, strlen(s)));
 
 //     bigint_deinit(&n);
 }
@@ -132,6 +139,7 @@ TEST(ffx, ffx_str_u32_custom_radix_2b)
     const char str[] = "0000001234567890";
     char s[sizeof(str) * 4];
     const char * expected = u8"ĵĵĵĵĵĵĶķĸĹϺϻϼϽϾĵ";
+    const uint32_t * radix = (uint32_t*)L"ĵĶķĸĹϺϻϼϽϾ";
     // const char * u8 = u8"1Ķ2Ķ3";//ĵĶķĸ";// ĵĶķĸĹϺϻϼϽϾ";
     // uint32_t * u32_radix = (uint32_t*)calloc(50, sizeof(uint32_t));
     // size_t len = 50;
@@ -159,7 +167,7 @@ TEST(ffx, ffx_str_u32_custom_radix_2b)
     bigint_set_str(&n, str, 10);
     // s[0] = '\0';
 // printf("sizeof(s) - %d\n", sizeof(s));
-    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)) , (uint32_t*)L"ĵĶķĸĹϺϻϼϽϾ", &n), 0);
+    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)) , radix, &n), 0);
     EXPECT_EQ(strcmp(s, expected), 0) << s << " " << expected;
     EXPECT_EQ(u8_mbsnlen((uint8_t*)str, strlen(str)), u8_mbsnlen((uint8_t*)s, strlen(s)));
 
@@ -171,7 +179,9 @@ TEST(ffx, ffx_str_u32_custom_radix_3)
 {
     // setlocale(LC_ALL, "C.UTF-8");
     const char str[] = "1234567890";
+    const uint32_t * radix = (uint32_t*)L"012345678Ͼ";
     char s[30];
+    const char * expected = u8"12345678Ͼ0";
     // const char * u8 = u8"1Ķ2Ķ3";//ĵĶķĸ";// ĵĶķĸĹϺϻϼϽϾ";
     // uint32_t * u32_radix = (uint32_t*)calloc(50, sizeof(uint32_t));
     // size_t len = 50;
@@ -198,8 +208,8 @@ TEST(ffx, ffx_str_u32_custom_radix_3)
     bigint_init(&n);
     bigint_set_str(&n, str, 10);
 //    s[0] = '\0';
-    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)), (uint32_t*)L"012345678Ͼ", &n), 0);
-    EXPECT_EQ(strcmp(s, u8"12345678Ͼ0"), 0);
+    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)), radix, &n), 0);
+    EXPECT_EQ(strcmp(s, expected), 0);
     EXPECT_EQ(u8_mbsnlen((uint8_t*)str, strlen(str)), u8_mbsnlen((uint8_t*)s, strlen(s)));
 
     bigint_deinit(&n);
@@ -207,8 +217,9 @@ TEST(ffx, ffx_str_u32_custom_radix_3)
 
 TEST(ffx, ffx_str_u32_custom_radix_4)
 {
-    // setlocale(LC_ALL, "C.UTF-8");
-    const char str[] = "1234567890";
+    setlocale(LC_ALL, "C.UTF-8");
+    const char str[] = "000001234567890";
+    const uint32_t * radix = (uint32_t *)L"012345678Ͼ";
     char s[30];
     const char * expected = u8"0000012345678Ͼ0";
     // const char * u8 = u8"1Ķ2Ķ3";//ĵĶķĸ";// ĵĶķĸĹϺϻϼϽϾ";
@@ -237,7 +248,7 @@ TEST(ffx, ffx_str_u32_custom_radix_4)
     bigint_init(&n);
     bigint_set_str(&n, str, 10);
 //    s[0] = '\0';
-    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)) + 5, (uint32_t*)L"012345678Ͼ", &n), 0);
+    EXPECT_EQ(ffx_str_u32_custom_radix(s, sizeof(s), u8_mbsnlen((uint8_t*)str, strlen(str)) , radix, &n), 0);
     EXPECT_EQ(strcmp(s, expected), 0);
     EXPECT_EQ(u8_mbsnlen((uint8_t*)str, strlen(str)), u8_mbsnlen((uint8_t*)s, strlen(s)));
 
