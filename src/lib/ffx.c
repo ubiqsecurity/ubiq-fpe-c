@@ -42,9 +42,9 @@ int ffx_ctx_create(void ** const _ctx,
     //  * implementation becomes increasingly difficult and
     //  * less useful in practice after the limits below.
     //  */
-    // if (radix < 2 || radix > 36) {
-    //     return -EINVAL;
-    // }
+    if (radix < 2 || radix > 255) {
+        return -EINVAL;
+    }
 
     /*
      * for both ff1 and ff3-1: radix**minlen >= 1000000

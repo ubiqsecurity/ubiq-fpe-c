@@ -49,6 +49,10 @@ int bigint_set_str(bigint_t * const x,
 int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha);
 
+// Makes assumption about character set being used rad <= 10 (0-9), rad <= 36 (0-9a-z), rad <= 62 (0-9a-zA-Z), 63 < rad (\x01 - \xFF)
+int __bigint_set_str_radix(bigint_t * const x,
+                     const char * const str, const size_t radix);
+
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                     const uint32_t * const alpha, const bigint_t * const x);
 
@@ -75,6 +79,10 @@ int bigint_get_str(char * const str, const size_t len,
 // str and len MUST account for null terminator
 int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const x);
+
+// Makes assumption about character set being used rad <= 10 (0-9), rad <= 36 (0-9a-z), rad <= 62 (0-9a-zA-Z), 63 < rad (\x01 - \xFF)
+int __bigint_get_str_radix(char * const str, const size_t len,
+                     const size_t radix, const bigint_t * const x);
 
 static inline
 void * bigint_export(const bigint_t * const x, size_t * const count)

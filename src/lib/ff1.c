@@ -107,13 +107,13 @@ int ff1_cipher(struct ff1_ctx * const ctx,
 
     char * X = strdup(_X);
 
-    if (ctx->ffx.custom_radix_str) {
-        X = calloc(strlen(_X) + 1, sizeof(char));
-        map_characters(X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
-    } else if (ctx->ffx.u32_custom_radix_str) {
-        X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
-        map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
-    }
+    // if (ctx->ffx.custom_radix_str) {
+    //     X = calloc(strlen(_X) + 1, sizeof(char));
+    //     map_characters(X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    // } else if (ctx->ffx.u32_custom_radix_str) {
+    //     X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
+    //     map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    // }
 
     /* Step 1 */
     const unsigned int n = strlen(X);

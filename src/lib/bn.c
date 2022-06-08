@@ -203,88 +203,96 @@ int __bigint_set_str(bigint_t * const x,
 
 
     const size_t rad = strlen(alpha);
-    if (rad <= 62) {
-        // Cannot make any assumption about the alpha character set.  Assume that the 
-        // character set does NOT match the expected bignum values.
-        size_t len = strlen(str);
-        char * mapped = calloc(len + 1, sizeof(char));
-        if (mapped == NULL) {
-            err = -ENOMEM;
-        } else {
-            mapped[len] = '\0';
-            (debug) && printf("%s set_str (%s)\n", csu, str);
-            err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
-            (debug) && printf(" %s mapped (%s)\n", csu, mapped);
-            if (!err) {
-                err = bigint_set_str(x, mapped, rad);
-                (debug) && gmp_printf("%s x %Zd\n", csu, x);
-            }
-
-        }
-        free(mapped);
+    
+    // Cannot make any assumption about the alpha character set.  Assume that the 
+    // character set does NOT match the expected bignum values.
+    size_t len = strlen(str);
+    char * mapped = calloc(len + 1, sizeof(char));
+    if (mapped == NULL) {
+        err = -ENOMEM;
     } else {
-    const int len = strlen(str);
+        mapped[len] = '\0';
+        (debug) && printf("%s set_str (%s)\n", csu, str);
+        err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
+        (debug) && printf(" %s mapped (%s)\n", csu, mapped);
+        if (!err) {
+            err = __bigint_set_str_radix(x, mapped, rad);
+            (debug) && gmp_printf("%s x %Zd\n", csu, x);
+        }
 
-    /*
-    * the alphabet can be anything and doesn't have
-    * to be in a recognized canonical order. the only
-    * requirement is that every value in the list be
-    * unique. checking that constraint is an expensive
-    * undertaking, so it is assumed. as such, the radix
-    * is simply the number of characters in the alphabet.
-    */
-    // const int rad = strlen(alpha);
+    }
+    free(mapped);
 
-    bigint_t m, a;
-    int i;
+  (debug) && printf("END DEBUG %s err(%d)\n\n", csu, err);
+  return err;
+}
 
-    /* @n will be the numerical value of @str */
-    bigint_set_ui(x, 0);
+int __bigint_set_str_radix(bigint_t * const x,
+                     const char * const str, const size_t radix)
+{
+  static const char * csu = "__bigint_set_str_radix";
+  int debug = 0;
+  int err = 0;
 
-    /*
-    * @m is a multiplier used to multiply each digit
-    * of the input into its correct position in @n
-    */
-    bigint_init(&m);
-    bigint_set_ui(&m, 1);
+  (debug) && printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix);
 
-    /*
-    * @a is a temporary value used
-    * to add each digit into @n
-    */
-    bigint_init(&a);
 
-    for (i = 0; i < len; i++) {
-        const char * pos;
+    if (radix <= 62) {
+        // Assumption that the character set matches valid ranges for 2-62
+        err = bigint_set_str(x, str, radix);
+        (debug) && gmp_printf("%s x %Zd\n", csu, x);
+    } else {
+        const int len = strlen(str);
+
+        // Alphabet is assumed to be \x01 - \xFF meaning the character integer value is related 
+        // the index in the alpha string so we can simply skip that portion of the logic.
+
+
+        bigint_t m, a;
+        int i;
+
+        /* @n will be the numerical value of @str */
+        bigint_set_ui(x, 0);
 
         /*
-         * determine index/position in the alphabet.
-         * if the character is not present the input
-         * is not valid.
-         */
-        pos = strchr(alpha, str[len - 1 - i]);
-        if (!pos) {
-            err = -EINVAL;
-            break;
-        }
+        * @m is a multiplier used to multiply each digit
+        * of the input into its correct position in @n
+        */
+        bigint_init(&m);
+        bigint_set_ui(&m, 1);
+
+        /*
+        * @a is a temporary value used
+        * to add each digit into @n
+        */
+        bigint_init(&a);
+
+        for (i = 0; i < len; i++) {
+            size_t pos;
+
+            /*
+            * determine index/position in the alphabet.
+            * if the character is not present the input
+            * is not valid.
+            */
+            pos = ((uint8_t)str[len - 1 - i]); // values 1 - 255 since we don't support 0 (null terminator)
 
         /*
          * multiply the digit into the correct position
          * and add it to the result
          */
-        bigint_mul_ui(&a, &m, pos - alpha);
-        bigint_add(x, x, &a);
+            bigint_mul_ui(&a, &m, pos - 1); // 0 - 254 (radix 255)
+            bigint_add(x, x, &a);
 
-        bigint_mul_ui(&m, &m, rad);
+            bigint_mul_ui(&m, &m, radix);
+        }
+
+        bigint_deinit(&a);
+        bigint_deinit(&m);
     }
-
-    bigint_deinit(&a);
-    bigint_deinit(&m);
-  }
   (debug) && printf("END DEBUG %s err(%d)\n\n", csu, err);
   return err;
 }
-
 
 /*
  * This function returns the number of bytes (that would have been)
@@ -297,32 +305,47 @@ int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const _x)
 {
 
-  static const char * csu = "__bigint_get_str";
-  int debug = 0;
-  int i = 0;
-  const size_t rad = strlen(alpha);
-  int err = 0;
+    static const char * csu = "__bigint_get_str";
+    int debug = 0;
+    const size_t rad = strlen(alpha);
+    int err = 0;
 
-  (debug) && printf("START DEBUG %s rad(%d)\n", csu, rad);
+    (debug) && printf("START DEBUG %s rad(%d)\n", csu, rad);
 
-  if (rad <= 62) {
 
     (debug) && printf("DEBUG %s len(%d)\n", csu, len);
     (debug) && printf("DEBUG %s alpha(%s)\n", csu, alpha);
-    err = bigint_get_str(str, len, rad, _x);
+    err = __bigint_get_str_radix(str, len, rad, _x);
     (debug) && gmp_printf("__bigint_get_str   _x %Zd\n", _x);
     if (!err) {
-      (debug) && printf("__bigint_get_str  str BEFORE(%s)\n", str);
-      err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
-      (debug) && printf("__bigint_get_str  str  AFTER(%s)\n", str);
+        (debug) && printf("__bigint_get_str  str BEFORE(%s)\n", str);
+        err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
+        (debug) && printf("__bigint_get_str  str  AFTER(%s)\n", str);
     }
 
-    (debug) && printf("DEBUG %s i(%d)\n", csu, i);
+    (debug) && printf("DEBUG %s err(%d)\n", csu, err);
     (debug) && printf("DEBUG %s s(%s)\n", csu, str);
+    return err;
+}
+
+int __bigint_get_str_radix(char * const str, const size_t len,
+                     const size_t radix, const bigint_t * const _x)
+{
+
+  static const char * csu = "__bigint_get_str";
+  int debug = 0;
+  int err = 0;
+
+  (debug) && printf("START DEBUG %s rad(%d)\n", csu, radix);
+
+  if (radix <= 62) {
+
+    err = bigint_get_str(str, len, radix, _x);
+
   } else {
-
+    const char * const alpha = get_standard_bignum_radix(radix);
     bigint_t x;
-
+    int i = 0;
     /*
      * to convert the numerical value, repeatedly
      * divide (storing the result and the remainder)
@@ -335,12 +358,11 @@ int __bigint_get_str(char * const str, const size_t len,
 
     bigint_init(&x);
     bigint_mul_ui(&x, _x, 1);
-    i = 0;
 
     while (bigint_cmp_si(&x, 0) != 0) {
         int r;
 
-        bigint_div_ui(&x, &r, &x, rad);
+        bigint_div_ui(&x, &r, &x, radix);
         if (i < len) {
             str[i] = alpha[r];
         }
@@ -367,12 +389,12 @@ int __bigint_get_str(char * const str, const size_t len,
     (debug) && printf("DEBUG %s s(%s)\n", csu, str);
 
     bigint_deinit(&x);
+    (debug) && printf("DEBUG %s ret(%d)\n", csu, i);
+    if (!err && i > len) {
+        err = -ENOMEM;
+    }
   }
-  (debug) && printf("DEBUG %s ret(%d)\n", csu, i);
-  if (i > len) {
-      err = -ENOMEM;
-  }
-  (debug) && printf("END DEBUG %s i(%d)  err(%d)\n\n", csu, i, err);
+  (debug) && printf("END DEBUG %s err(%d) str(%s) \n\n", csu, err, str);
   return err;
 
 }
