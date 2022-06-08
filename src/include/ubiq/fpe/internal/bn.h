@@ -149,6 +149,14 @@ int map_characters(
     const char * const src_chars,
     const char * const dst_chars);
 
+int map_characters_from_u32(char * const dst, const uint8_t * const src,
+    const uint32_t * const src_chars,
+    const char * const dst_chars);
+
+int map_characters_to_u32(uint8_t * const dst, const char * const src,
+    const char * const src_chars,
+    const uint32_t * const dst_chars) ;
+
 const char * get_standard_bignum_radix(
     const size_t radix);
 

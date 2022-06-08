@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistr.h>
 
 struct ff1_ctx
 {
@@ -91,10 +92,29 @@ void ff1_ctx_destroy(struct ff1_ctx * const ctx)
 static
 int ff1_cipher(struct ff1_ctx * const ctx,
                char * const Y,
-               const char * const X,
+               const char * const _X,
                const uint8_t * T, size_t t,
                const int encrypt)
 {
+
+    // Input character set may be non-standard or even UTF8.
+
+    // Since we know the radix and custom radix character sets,
+    // We are going to map X to a standardized character set NOW, as long as radix is <= 255
+    
+    // We then convert back to the custom radix at the end.
+    // If radix <= 62, we can use built in big number processing, otherwise we need to use the radix mapping string
+
+    char * X = strdup(_X);
+
+    if (ctx->ffx.custom_radix_str) {
+        X = calloc(strlen(_X) + 1, sizeof(char));
+        map_characters(X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    } else if (ctx->ffx.u32_custom_radix_str) {
+        X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
+        map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    }
+
     /* Step 1 */
     const unsigned int n = strlen(X);
     const unsigned int u = n / 2, v = n - u;

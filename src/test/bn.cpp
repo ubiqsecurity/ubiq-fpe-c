@@ -320,6 +320,129 @@ TEST(chars, mapset_invalid)
     free(dst1);
 
 }
+ 
+TEST(chars, mapset_63)
+{
+    unsigned long long r1 = 0;
+
+    char src[]      = "09";
+    char expected[] = "\x01\x0a";
+
+    const char input_set[] = "0123456789";
+    const char * output_set = get_standard_bignum_radix(63);
+
+    char * dst1;
+
+    dst1 = strdup(src);
+
+    r1 = map_characters(dst1,src,input_set, output_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(expected, dst1), 0);
+
+    free(dst1);
+
+}
+
+TEST(chars, u32_mapset_63)
+{
+    setlocale(LC_ALL, "C.UTF-8");
+    unsigned long long r1 = 0;
+
+    char src[]      = "09";
+    char expected[] = "\x01\x0a";
+
+    const uint32_t * input_set = (uint32_t * )L"0123456789";
+    const char * output_set = get_standard_bignum_radix(63);
+
+    char * dst1;
+
+    dst1 = strdup(src);
+
+    r1 = map_characters_from_u32(dst1, (uint8_t *) src,input_set, output_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(expected, dst1), 0);
+
+    free(dst1);
+
+}
+
+TEST(chars, u32_to_mapset_63)
+{
+    setlocale(LC_ALL, "C.UTF-8");
+    unsigned long long r1 = 0;
+
+    char src[]      = "09";
+    char expected[] = "\x01\x0a";
+
+    const uint32_t * input_set = (uint32_t * )L"0123456789";
+    const char * output_set = get_standard_bignum_radix(63);
+
+    char * dst1;
+    uint8_t * dst2;
+
+    dst1 = strdup(src);
+    dst2 = (uint8_t*) calloc(sizeof(src) + 1, sizeof(uint8_t));
+
+    r1 = map_characters_from_u32(dst1, (uint8_t *) src,input_set, output_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(expected, dst1), 0);
+
+    r1 = map_characters_to_u32(dst2, dst1, output_set, input_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(src, (char *)dst2), 0);
+
+    free(dst1);
+    free(dst2);
+
+}
+
+TEST(chars, mapset_255)
+{
+    setlocale(LC_ALL, "C.UTF-8");
+    unsigned long long r1 = 0;
+
+    char src[]      = "0Az<";
+    char expected[] = "\x01\x0b\x3e\x57";
+
+    const char * input_set = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()~`{}|[]:;,./?><";
+    const char * output_set = get_standard_bignum_radix(255);
+    uint32_t * u32_input_set = (uint32_t *)calloc(strlen(input_set) + 1, sizeof(uint32_t));
+    size_t len = strlen(input_set) + 1;
+    u32_input_set = u8_to_u32((const uint8_t*)input_set, strlen(input_set), u32_input_set, &len);
+    printf("len(%d)\n",len);
+
+    char * dst1;
+    char * dst2;
+
+    dst1 = strdup(src);
+    dst2 = (char *) calloc(strlen(src) + 1, sizeof(char));
+
+    r1 = map_characters(dst1, src, input_set, output_set);
+    EXPECT_EQ(r1, 0);
+    // for (int i=0;i<strlen(src); i++) {
+    //     printf("dst1[%d] = %x\n",i, dst1[i] & 0xff);
+    // }
+    EXPECT_EQ(strcmp(expected, dst1), 0);
+
+    // Reverse it
+    r1 = map_characters(dst2, dst1, output_set, input_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(src, dst2), 0);
+
+
+    r1 = map_characters_from_u32(dst1, (uint8_t*)src, u32_input_set, output_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(expected, dst1), 0);
+
+    r1 = map_characters_to_u32((uint8_t*)dst2, dst1, output_set, u32_input_set);
+    EXPECT_EQ(r1, 0);
+    EXPECT_EQ(strcmp(dst2, src), 0);
+
+    free(dst1);
+    free(dst2);
+    free(u32_input_set);
+}
+
 
 TEST(radix, t1)
 {
