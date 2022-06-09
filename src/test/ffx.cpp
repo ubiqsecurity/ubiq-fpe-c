@@ -50,7 +50,7 @@ TEST(ffx, str_custom)
     bigint_set_str(&n, "559", 10);
 
     s[0] = '\0';
-    EXPECT_EQ(ffx_str_custom_radix(s, 5, 4, "0123456789ab", &n), 0);
+    EXPECT_EQ(ffx_str_custom_radix(s, 5, 4, (uint8_t*)"0123456789ab", &n), 0);
     EXPECT_EQ(strcmp(s, "03a7"), 0);
 
     bigint_deinit(&n);
@@ -66,7 +66,7 @@ TEST(ffx, str_custom_2)
     bigint_set_str(&n, str, 10);
 
     s[0] = '\0';
-    EXPECT_EQ(ffx_str_custom_radix(s, sizeof(s), sizeof(s) - 1, "0123456789", &n), 0);
+    EXPECT_EQ(ffx_str_custom_radix(s, sizeof(s), sizeof(s) - 1, (uint8_t*)"0123456789", &n), 0);
     EXPECT_EQ(strcmp(s, str), 0) << s << " " << str;
 
     bigint_deinit(&n);

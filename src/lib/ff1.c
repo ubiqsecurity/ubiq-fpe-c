@@ -40,7 +40,7 @@ int ff1_ctx_create_custom_radix(struct ff1_ctx ** const ctx,
                    const uint8_t * const keybuf, const size_t keylen,
                    const uint8_t * const twkbuf, const size_t twklen,
                    const size_t mintwklen, const size_t maxtwklen,
-                   const char * const custom_radix_str) 
+                   const uint8_t * const custom_radix_str) 
 {
     int res = 0;
     const size_t maxtxtlen =
@@ -352,7 +352,6 @@ int ff1_cipher(struct ff1_ctx * const ctx,
      if (ctx->ffx.custom_radix_str) {
         map_characters(Y, Y, get_standard_bignum_radix(ctx->ffx.radix), ctx->ffx.custom_radix_str);
     } else if (ctx->ffx.u32_custom_radix_str) {
-        X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
         map_characters_to_u32((uint8_t*)Y, Y, get_standard_bignum_radix(ctx->ffx.radix), ctx->ffx.u32_custom_radix_str);
     }
 

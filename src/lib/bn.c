@@ -458,7 +458,7 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
     const uint32_t * const dst_chars) 
 {
     int res = 0;
-    int debug = 1;
+    int debug = 0;
     size_t src_len = strlen(src);
     uint32_t * tmp = calloc(src_len + 1, sizeof(uint32_t));
 

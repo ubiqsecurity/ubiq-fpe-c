@@ -124,7 +124,7 @@ int ffx_ctx_create_custom_radix_str(void ** const _ctx,
                    const uint8_t * const twkbuf, const size_t twklen,
                    const size_t maxtxtlen,
                    const size_t mintwklen, const size_t maxtwklen,
-                   const char * const custom_radix_str) 
+                   const uint8_t * const custom_radix_str) 
 {
     // Get the number of bytes in the custom radix string
     size_t radix_len = strlen(custom_radix_str);
@@ -264,7 +264,7 @@ int ffx_str(char * const str, const size_t len,
 
 int ffx_str_custom_radix(char * const str, const size_t len,
             const unsigned int m, 
-            const char * const radix_str ,
+            const uint8_t * const radix_str ,
             const bigint_t * const n)
 {
     int res;
