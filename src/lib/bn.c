@@ -107,9 +107,11 @@ int __u32_bigint_set_str(bigint_t * const x,
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                    const uint32_t * const alpha, const bigint_t * const _x)
 {
+    int debug = 0;
+    const char * csu = "__u32_bigint_get_str";
     const int rad = u32_strlen(alpha);
 
-  printf("__u32_bigint_get_str len(%d) rad(%d) alpha(%S) \n",len, rad, alpha);
+    (debug) && printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha);
    
    if (str == NULL) {
        return -EINVAL;

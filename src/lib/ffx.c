@@ -295,7 +295,10 @@ int ffx_str_u32_custom_radix(char * const str, const size_t len,
             const uint32_t * const u32_radix_str ,
             const bigint_t * const n)
 {
+    const char * csu = "ffx_str_u32_custom_radix";
     int res;
+    int debug = 0;
+
 
     uint32_t * u32_str = calloc(len + 1, sizeof(uint32_t));
 
@@ -304,9 +307,9 @@ int ffx_str_u32_custom_radix(char * const str, const size_t len,
         res = __u32_bigint_get_str(u32_str, len, u32_radix_str, n);
         if (res == 0) {
 //            printf("str(%s)\n",str);
-            printf("u32_str(%S)\n",u32_str);
+            debug && printf("%s u32_str(%S)\n",csu, u32_str);
             const size_t u32_len = u32_strlen(u32_str);
-                printf("m(%d) u32_len(%d) len(%d)\n", m, u32_len, len);
+                debug && printf("%s m(%d) u32_len(%d) len(%d)\n", csu, m, u32_len, len);
 
             if (u32_len <= m) {
                 size_t result_len = len;
@@ -316,11 +319,11 @@ int ffx_str_u32_custom_radix(char * const str, const size_t len,
                     wmemmove(u32_str + (m - u32_len), u32_str, u32_len + 1);
                     wmemset(u32_str, u32_radix_str[0], m - u32_len);
                 }
-                printf("after  u32_str(%S)\n", u32_str);
+                debug && printf("%s after  u32_str(%S)\n",csu, u32_str);
                 // If the provided length is not long enough, allocates a new string and sets returned size.
                 // In that case, it is an error and need to make sure to free new string.
                 char * tmp = u32_to_u8(u32_str, m + 1, str, &result_len);
-                printf("tmp(%s) str(%s) result_len(%d)\n", (tmp == NULL) ? "NUL" : tmp, str, result_len);
+                debug && printf("%s tmp(%s) str(%s) result_len(%d)\n", csu, (tmp == NULL) ? "NUL" : tmp, str, result_len);
                 if (result_len > len) {
                     res = -EOVERFLOW;
                     free(tmp);
