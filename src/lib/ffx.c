@@ -238,15 +238,21 @@ int ffx_str(char * const str, const size_t len,
 {
     int res;
 
+    // TODO - this should be based on call to get zeroth character of std radix string for radix value
+    char c = '0';
+    if (r > 62) {
+        c = '\x01';
+    }
+
     res = -EINVAL;
     if (bigint_cmp_si(n, 0) >= 0) {
-        res = bigint_get_str(str, len, r, n);
+        res = __bigint_get_str_radix(str, len, r, n);
         if (res == 0) {
             const size_t len = strlen(str);
 
             if (len < m) {
                 memmove(str + (m - len), str, len + 1);
-                memset(str, '0', m - len);
+                memset(str, c, m - len);
             } else if (len > m) {
                 res = -EOVERFLOW;
             }

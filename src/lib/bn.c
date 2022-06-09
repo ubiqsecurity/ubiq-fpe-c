@@ -405,19 +405,23 @@ int map_characters(char * const dst, const char * const src,
     const char * const src_chars,
     const char * const dst_chars) 
 {
+    const char * csu = "map_characters";
     int debug = 0;
 
-    (debug) && printf("src_chars (%s) len(%d)\n", src_chars, strlen(src_chars));
+    (debug) && printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars);
 
     size_t len = strlen(src);
     for (int i = 0; i < len; i++) {
         char * pos = strchr(src_chars, src[i]);
+        (debug) && printf("%s %d %c\n", csu, i, *pos);
         if (!pos) {
             (debug) && printf("Unable to find %c \n", src[i]);
             return -EINVAL;
         }
+        (debug) && printf("%s %d %c\n", csu, i, *pos);
         dst[i] = dst_chars[pos - src_chars];
     }
+    (debug) && printf("%s dst(%s)\n", csu, dst);
     return 0;
 }
 

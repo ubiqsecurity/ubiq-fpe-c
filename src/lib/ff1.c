@@ -96,6 +96,8 @@ int ff1_cipher(struct ff1_ctx * const ctx,
                const uint8_t * T, size_t t,
                const int encrypt)
 {
+    const char * csu = "ff1_cipher";
+        int debug = 0;
 
     // Input character set may be non-standard or even UTF8.
 
@@ -105,15 +107,19 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     // We then convert back to the custom radix at the end.
     // If radix <= 62, we can use built in big number processing, otherwise we need to use the radix mapping string
 
-    char * X = strdup(_X);
+    char * X = NULL;
 
-    // if (ctx->ffx.custom_radix_str) {
-    //     X = calloc(strlen(_X) + 1, sizeof(char));
-    //     map_characters(X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
-    // } else if (ctx->ffx.u32_custom_radix_str) {
-    //     X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
-    //     map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
-    // }
+    if (ctx->ffx.custom_radix_str) {
+        X = calloc(strlen(_X) + 1, sizeof(char));
+        map_characters(X, _X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+        (debug) && printf("%s _X(%s) X(%s) radix(%s) std(%s) \n", csu, _X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    } else if (ctx->ffx.u32_custom_radix_str) {
+        X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
+        map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+    } else {
+       X = strdup(_X);
+
+    }
 
     /* Step 1 */
     const unsigned int n = strlen(X);
@@ -217,13 +223,13 @@ int ff1_cipher(struct ff1_ctx * const ctx,
      * If the ctx was created with a custom radix string, then use is custom radix
      * information to convert to a bigint
      */
-    if (ctx->ffx.custom_radix_str != NULL)  {
-        __bigint_set_str(&nA, A, ctx->ffx.custom_radix_str);
-        __bigint_set_str(&nB, B, ctx->ffx.custom_radix_str);
-    } else {
-        bigint_set_str(&nA, A, ctx->ffx.radix);
-        bigint_set_str(&nB, B, ctx->ffx.radix);
-    }
+    // if (ctx->ffx.custom_radix_str != NULL)  {
+    //     __bigint_set_str(&nA, A, ctx->ffx.custom_radix_str);
+    //     __bigint_set_str(&nB, B, ctx->ffx.custom_radix_str);
+    // } else {
+        __bigint_set_str_radix(&nA, A, ctx->ffx.radix);
+        __bigint_set_str_radix(&nB, B, ctx->ffx.radix);
+    // }
 
     /* calculate radix**u and radix**v for use in the loop */
     bigint_set_ui(&mU, ctx->ffx.radix);
@@ -316,36 +322,43 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     // when re-assembling data
 
     if (encrypt) {
-        if (ctx->ffx.custom_radix_str != NULL)  {
-            ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nA);
-            ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nB);
-        } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
-            ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nA);
-            ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nB);
-        } else {
+        // if (ctx->ffx.custom_radix_str != NULL)  {
+        //     ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nA);
+        //     ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nB);
+        // } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
+        //     ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nA);
+        //     ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nB);
+        // } else {
             ffx_str(Y, v + 2, u, ctx->ffx.radix, &nA);
             ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nB);
-        }
+        // }
     } else {
-        if (ctx->ffx.custom_radix_str != NULL)  {
-            ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nB);
-            ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nA);
-        } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
-            ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nB);
-            ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nA);
-        } else {
+        // if (ctx->ffx.custom_radix_str != NULL)  {
+        //     ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nB);
+        //     ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nA);
+        // } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
+        //     ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nB);
+        //     ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nA);
+        // } else {
             ffx_str(Y, v + 2, u, ctx->ffx.radix, &nB);
             ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nA);
-        }
+        // }
     }
 
     /* Step 7 */
     // strcpy(Y, A);
     // strcat(Y, B);
 
+     if (ctx->ffx.custom_radix_str) {
+        map_characters(Y, Y, get_standard_bignum_radix(ctx->ffx.radix), ctx->ffx.custom_radix_str);
+    } else if (ctx->ffx.u32_custom_radix_str) {
+        X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
+        map_characters_to_u32((uint8_t*)Y, Y, get_standard_bignum_radix(ctx->ffx.radix), ctx->ffx.u32_custom_radix_str);
+    }
+
     memset(scratch.buf, 0, scratch.len);
     free(scratch.buf);
-
+    free(X);
     bigint_deinit(&mV);
     bigint_deinit(&mU);
     bigint_deinit(&y);
