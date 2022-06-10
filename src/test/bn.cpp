@@ -695,6 +695,22 @@ TEST(radix, u32_g)
 
 }
 
+TEST(radix, quick_test)
+{
+    bigint_t n;
+    int r1(0);
+    const char data []= "1234";
+    const char input_radix [] = " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    bigint_init(&n);
+
+    r1 = __bigint_set_str(&n, data, input_radix);
+    ASSERT_EQ(r1, 0);
+
+    gmp_printf("%Zd\n", n);
+  
+    bigint_deinit(&n);
+}
+
 #ifdef NODEF
 TEST(radix, negative)
 {

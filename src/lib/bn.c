@@ -334,7 +334,7 @@ int __bigint_get_str_radix(char * const str, const size_t len,
                      const size_t radix, const bigint_t * const _x)
 {
 
-  static const char * csu = "__bigint_get_str";
+  static const char * csu = "__bigint_get_str_radix";
   int debug = 0;
   int err = 0;
 

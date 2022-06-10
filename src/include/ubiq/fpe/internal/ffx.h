@@ -32,13 +32,13 @@ char * ffx_revs(char * const dst, const char * const src)
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r, const bigint_t * n);
 
-int ffx_str_custom_radix(char * const str, const size_t len,
-            const unsigned int m, const uint8_t * const radix_str , const bigint_t * n);
+// int ffx_str_custom_radix(char * const str, const size_t len,
+//             const unsigned int m, const uint8_t * const radix_str , const bigint_t * n);
 
-int ffx_str_u32_custom_radix(char * const str, const size_t len,
-            const unsigned int m, 
-            const uint32_t * const u32_radix_str ,
-            const bigint_t * const n);
+// int ffx_str_u32_custom_radix(char * const str, const size_t len,
+//             const unsigned int m, 
+//             const uint32_t * const u32_radix_str ,
+//             const bigint_t * const n);
             
 void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
