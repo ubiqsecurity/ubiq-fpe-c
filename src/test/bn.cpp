@@ -173,21 +173,21 @@ TEST(radix, invalid_characters_buffer)
 TEST(radix, radix62)
 {
     char data [5] = "\0\0\0\0";
-    std::vector<char> input_radix;
+    char input_radix[63];
     const char output_radix [] = "0123456879";
 
-    input_radix.resize(62);
+    memset(input_radix,0, sizeof(input_radix));
 
     // Arbitrary input string
-    for (int i = 0;i < input_radix.size(); i++) {
+    for (int i = 0;i < 62; i++) {
         input_radix[i] = '0' + i;
     }
 
     data[0] = input_radix[1];
-    radix_test(data, input_radix.data(), output_radix, "1");
+    radix_test(data, input_radix, output_radix, "1");
 
-    data[0] = input_radix.back();
-    radix_test(data, input_radix.data(), output_radix, "61");
+    data[0] = input_radix[61];
+    radix_test(data, input_radix, output_radix, "61");
 
 }
 
@@ -195,20 +195,21 @@ TEST(radix, radix62)
 TEST(radix, radix63)
 {
     char data [5] = "\0\0\0\0";
-    std::vector<char> input_radix;
+    char input_radix[65];
+
     const char output_radix [] = "0123456879";
 
-    input_radix.resize(63);
+    memset(input_radix,0, sizeof(input_radix));
 
-    for (int i = 0;i < input_radix.size(); i++) {
+    for (int i = 0;i < 63; i++) {
         input_radix[i] = '0' + i;
     }
 
     data[0] = input_radix[1];
-    radix_test(data, input_radix.data(), output_radix, "1");
+    radix_test(data, input_radix, output_radix, "1");
 
-    data[0] = input_radix.back();
-    radix_test(data, input_radix.data(), output_radix, "62");
+    data[0] = input_radix[62];
+    radix_test(data, input_radix, output_radix, "62");
 
 }
 
@@ -532,6 +533,7 @@ TEST(radix, u32)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
@@ -559,6 +561,7 @@ TEST(radix, u32_b)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
@@ -586,6 +589,7 @@ TEST(radix, u32_c)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
@@ -613,6 +617,7 @@ TEST(radix, u32_d)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
@@ -640,6 +645,7 @@ TEST(radix, u32_e)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
@@ -665,6 +671,7 @@ TEST(radix, u32_f)
 
     r1 = __u32_bigint_get_str((uint32_t *)data.data(), 2,  (uint32_t *)o_radix, &n);
     EXPECT_EQ(r1, -ENOMEM);
+    bigint_deinit(&n);
 
 }
 
@@ -692,6 +699,7 @@ TEST(radix, u32_g)
     EXPECT_EQ(r1, 0);
 
     EXPECT_EQ(memcmp(expect, data.data(), sizeof(expect)), 0);
+    bigint_deinit(&n);
 
 }
 
