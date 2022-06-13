@@ -157,6 +157,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
         t < ctx->ffx.twklen.min ||
         (ctx->ffx.twklen.max > 0 &&
          t > ctx->ffx.twklen.max)) {
+        free(X);
         return -EINVAL;
     }
 
@@ -166,6 +167,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     scratch.len = 2 * (v + 2) + p + q + r;
     scratch.buf = malloc(scratch.len);
     if (!scratch.buf) {
+        free(X);
         return -ENOMEM;
     }
 
@@ -220,16 +222,11 @@ int ff1_cipher(struct ff1_ctx * const ctx,
      * this speeds things up by avoiding having to
      * convert back and forth.
      * 
-     * If the ctx was created with a custom radix string, then use is custom radix
-     * information to convert to a bigint
+     * set_str function will address custom radix charactersets 
+     * because mapping was performed above once
      */
-    // if (ctx->ffx.custom_radix_str != NULL)  {
-    //     __bigint_set_str(&nA, A, ctx->ffx.custom_radix_str);
-    //     __bigint_set_str(&nB, B, ctx->ffx.custom_radix_str);
-    // } else {
-        __bigint_set_str_radix(&nA, A, ctx->ffx.radix);
-        __bigint_set_str_radix(&nB, B, ctx->ffx.radix);
-    // }
+    __bigint_set_str_radix(&nA, A, ctx->ffx.radix);
+    __bigint_set_str_radix(&nB, B, ctx->ffx.radix);
 
     /* calculate radix**u and radix**v for use in the loop */
     bigint_set_ui(&mU, ctx->ffx.radix);
@@ -317,32 +314,16 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     }
 
     /* convert the big integers back to strings */
-    // Optimized out Step 7 but going directly back to the buffer Y.  Needed 
+    // Optimized out Step 7 by going directly back to the buffer Y.  Needed 
     // to change order of a couple operations due to null terminator 
     // when re-assembling data
 
     if (encrypt) {
-        // if (ctx->ffx.custom_radix_str != NULL)  {
-        //     ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nA);
-        //     ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nB);
-        // } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
-        //     ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nA);
-        //     ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nB);
-        // } else {
-            ffx_str(Y, v + 2, u, ctx->ffx.radix, &nA);
-            ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nB);
-        // }
+        ffx_str(Y, v + 2, u, ctx->ffx.radix, &nA);
+        ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nB);
     } else {
-        // if (ctx->ffx.custom_radix_str != NULL)  {
-        //     ffx_str_custom_radix(Y, v + 2, u, ctx->ffx.custom_radix_str, &nB);
-        //     ffx_str_custom_radix(Y+u, v + 2, v, ctx->ffx.custom_radix_str, &nA);
-        // } else if (ctx->ffx.u32_custom_radix_str != NULL)  {
-        //     ffx_str_u32_custom_radix(Y, v + 2, u, ctx->ffx.u32_custom_radix_str, &nB);
-        //     ffx_str_u32_custom_radix(Y+u, v + 2, v, ctx->ffx.u32_custom_radix_str, &nA);
-        // } else {
-            ffx_str(Y, v + 2, u, ctx->ffx.radix, &nB);
-            ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nA);
-        // }
+        ffx_str(Y, v + 2, u, ctx->ffx.radix, &nB);
+        ffx_str(Y+u, v + 2, v, ctx->ffx.radix, &nA);
     }
 
     /* Step 7 */
