@@ -108,7 +108,7 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                    const uint32_t * const alpha, const bigint_t * const _x)
 {
     int debug_flag = 0;
-    const char * csu = "__u32_bigint_get_str";
+    const char * const csu = "__u32_bigint_get_str";
     const int rad = u32_strlen(alpha);
 
     DEBUG(debug_flag,printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha));
@@ -155,7 +155,7 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 
     // Make sure to set null terminator
     str[i] = '\0';
-     wprintf(L"__u32_bigint_get_str str(%S)\n",str);
+    DEBUG(debug_flag,wprintf(L"__u32_bigint_get_str str(%S)\n",str));
     if (i <= len) {
         /*
          * to simplify conversion from a numbers to a string,
@@ -197,7 +197,7 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha)
 {
-  static const char * csu = "__bigint_set_str";
+  static const char * const csu = "__bigint_set_str";
   int debug_flag = 0;
   int err = 0;
 
@@ -232,66 +232,65 @@ int __bigint_set_str(bigint_t * const x,
 int __bigint_set_str_radix(bigint_t * const x,
                      const char * const str, const size_t radix)
 {
-  static const char * csu = "__bigint_set_str_radix";
+  static const char * const csu = "__bigint_set_str_radix";
   int debug_flag = 0;
   int err = 0;
 
   DEBUG(debug_flag,printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix));
 
 
-    if (radix <= 62) {
-        // Assumption that the character set matches valid ranges for 2-62
-        err = bigint_set_str(x, str, radix);
-        DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
-    } else {
-        const int len = strlen(str);
+  if (radix <= 62) {
+      // Assumption that the character set matches valid ranges for 2-62
+      err = bigint_set_str(x, str, radix);
+      DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
+  } else {
+      const int len = strlen(str);
 
-        // Alphabet is assumed to be \x01 - \xFF meaning the character integer value is related 
-        // the index in the alpha string so we can simply skip that portion of the logic.
+      // Alphabet is assumed to be \x01 - \xFF meaning the character integer value is related 
+      // the index in the alpha string so we can simply skip that portion of the logic.
 
+      bigint_t m, a;
+      int i;
 
-        bigint_t m, a;
-        int i;
+      /* @n will be the numerical value of @str */
+      bigint_set_ui(x, 0);
 
-        /* @n will be the numerical value of @str */
-        bigint_set_ui(x, 0);
+      /*
+      * @m is a multiplier used to multiply each digit
+      * of the input into its correct position in @n
+      */
+      bigint_init(&m);
+      bigint_set_ui(&m, 1);
 
-        /*
-        * @m is a multiplier used to multiply each digit
-        * of the input into its correct position in @n
+      /*
+      * @a is a temporary value used
+      * to add each digit into @n
+      */
+      bigint_init(&a);
+
+      for (i = 0; i < len; i++) {
+          size_t pos;
+
+          /*
+          * determine index/position in the alphabet.
+          * if the character is not present the input
+          * is not valid.
+          */
+          pos = ((uint8_t)str[len - 1 - i]); // values 1 - 255 since we don't support 0 (null terminator)
+
+      /*
+        * multiply the digit into the correct position
+        * and add it to the result
         */
-        bigint_init(&m);
-        bigint_set_ui(&m, 1);
+          bigint_mul_ui(&a, &m, pos - 1); // 0 - 254 (radix 255)
+          bigint_add(x, x, &a);
 
-        /*
-        * @a is a temporary value used
-        * to add each digit into @n
-        */
-        bigint_init(&a);
+          bigint_mul_ui(&m, &m, radix);
+      }
 
-        for (i = 0; i < len; i++) {
-            size_t pos;
-
-            /*
-            * determine index/position in the alphabet.
-            * if the character is not present the input
-            * is not valid.
-            */
-            pos = ((uint8_t)str[len - 1 - i]); // values 1 - 255 since we don't support 0 (null terminator)
-
-        /*
-         * multiply the digit into the correct position
-         * and add it to the result
-         */
-            bigint_mul_ui(&a, &m, pos - 1); // 0 - 254 (radix 255)
-            bigint_add(x, x, &a);
-
-            bigint_mul_ui(&m, &m, radix);
-        }
-
-        bigint_deinit(&a);
-        bigint_deinit(&m);
-    }
+      bigint_deinit(&a);
+      bigint_deinit(&m);
+  }
   DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
   return err;
 }
@@ -307,34 +306,31 @@ int __bigint_get_str(char * const str, const size_t len,
                      const char * const alpha, const bigint_t * const _x)
 {
 
-    static const char * csu = "__bigint_get_str";
-    int debug_flag = 0;
-    const size_t rad = strlen(alpha);
-    int err = 0;
+  static const char * const csu = "__bigint_get_str";
+  int debug_flag = 0;
+  const size_t rad = strlen(alpha);
+  int err = 0;
 
-    DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, rad));
+  DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, rad));
 
+  DEBUG(debug_flag,printf("DEBUG %s len(%d)\n", csu, len));
+  DEBUG(debug_flag,printf("DEBUG %s alpha(%s)\n", csu, alpha));
+  err = __bigint_get_str_radix(str, len, rad, _x);
+  DEBUG(debug_flag,gmp_printf("__bigint_get_str   _x %Zd\n", _x));
+  if (!err) {
+      err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
+  }
 
-    DEBUG(debug_flag,printf("DEBUG %s len(%d)\n", csu, len));
-    DEBUG(debug_flag,printf("DEBUG %s alpha(%s)\n", csu, alpha));
-    err = __bigint_get_str_radix(str, len, rad, _x);
-    DEBUG(debug_flag,gmp_printf("__bigint_get_str   _x %Zd\n", _x));
-    if (!err) {
-        DEBUG(debug_flag,printf("__bigint_get_str  str BEFORE(%s)\n", str));
-        err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
-        DEBUG(debug_flag,printf("__bigint_get_str  str  AFTER(%s)\n", str));
-    }
-
-    DEBUG(debug_flag,printf("DEBUG %s err(%d)\n", csu, err));
-    DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
-    return err;
+  DEBUG(debug_flag,printf("DEBUG %s err(%d)\n", csu, err));
+  DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
+  return err;
 }
 
 int __bigint_get_str_radix(char * const str, const size_t len,
                      const size_t radix, const bigint_t * const _x)
 {
 
-  static const char * csu = "__bigint_get_str_radix";
+  static const char * const csu = "__bigint_get_str_radix";
   int debug_flag = 0;
   int err = 0;
 
@@ -407,7 +403,7 @@ int map_characters(char * const dst, const char * const src,
     const char * const src_chars,
     const char * const dst_chars) 
 {
-    const char * csu = "map_characters";
+    const char * const csu = "map_characters";
     int debug_flag = 0;
 
     DEBUG(debug_flag,printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars));
@@ -439,16 +435,15 @@ int map_characters_from_u32(char * const dst, const uint8_t * const src,
     tmp = u8_to_u32(src, u8_strlen(src) + 1, NULL, &src_len);
     DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
 
-//    size_t len = strlen(src);
     for (int i = 0; i < src_len - 1; i++) {
         uint32_t * pos = u32_strchr(src_chars, tmp[i]);
         if (!pos) {
             DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
+            free(tmp);
             return -EINVAL;
         }
         dst[i] = dst_chars[pos - src_chars];
     }
-//    dst[src_len] = '\0';
     free(tmp);
     return 0;
 }
@@ -463,15 +458,12 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
     uint32_t * tmp = calloc(src_len + 1, sizeof(uint32_t));
 
     DEBUG(debug_flag,printf("dst_chars (%S) len(%d)\n", dst_chars, u32_strlen(dst_chars)));
-    // DEBUG(debug_flag,printf("src_chars (%S) len(%d)\n", src_chars, src_len));
-//    tmp = u8_to_u32(src, u8_strlen(src) + 1, NULL, &src_len);
-    // DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
 
-//    size_t len = strlen(src);
     for (int i = 0; i < src_len ; i++) {
         char * pos = strchr(src_chars, src[i]);
         if (!pos) {
             DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
+            free(tmp);
             return -EINVAL;
         }
         tmp[i] = dst_chars[pos - src_chars];
@@ -483,8 +475,6 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
     } else {
         res = -ENOMEM;
     }
-//    dst[src_len] = '\0';
-    // DEBUG(debug_flag,printf("dst (%S) tmp(%S) src_len(%d)\n", dst, tmp, src_len));
     free(tmp);
     return res;
 }
