@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <ubiq/fpe/internal/bn.h>
+#include <ubiq/fpe/internal/debug.h>
 
 #include <openssl/evp.h>
 
@@ -32,14 +33,6 @@ char * ffx_revs(char * const dst, const char * const src)
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r, const bigint_t * n);
 
-// int ffx_str_custom_radix(char * const str, const size_t len,
-//             const unsigned int m, const uint8_t * const radix_str , const bigint_t * n);
-
-// int ffx_str_u32_custom_radix(char * const str, const size_t len,
-//             const unsigned int m, 
-//             const uint32_t * const u32_radix_str ,
-//             const bigint_t * const n);
-            
 void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len);
@@ -77,6 +70,8 @@ int ffx_ctx_create(void ** const _ctx,
                    const size_t mintwklen, const size_t maxtwklen,
                    const unsigned int radix);
 
+// Use a custom radix string.  radix string can be simple ascii7 or full utf8.  
+// Either one is handled internally.
 int ffx_ctx_create_custom_radix_str(void ** const _ctx,
     const size_t len, const size_t off,
     const uint8_t * const keybuf, const size_t keylen,

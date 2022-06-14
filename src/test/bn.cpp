@@ -46,8 +46,6 @@ void __u32_radix_test(const char * const input, const char * const ialpha,
     r1 = __u32_bigint_set_str(&n, u32_input, u32_ialpha);
     ASSERT_EQ(r1, 0);
 
-    // r1 = __u32_bigint_get_str(nullptr, 0, u32_oalpha, &n);
-    // ASSERT_GT(r1, 0);
     output.resize(50);
 
     r2 = __u32_bigint_get_str(output.data(), output.size(), u32_oalpha, &n);
@@ -410,7 +408,7 @@ TEST(chars, mapset_255)
     uint32_t * u32_input_set = (uint32_t *)calloc(strlen(input_set) + 1, sizeof(uint32_t));
     size_t len = strlen(input_set) + 1;
     u32_input_set = u8_to_u32((const uint8_t*)input_set, strlen(input_set), u32_input_set, &len);
-    printf("len(%d)\n",len);
+    // printf("len(%d)\n",len);
 
     char * dst1;
     char * dst2;
@@ -420,9 +418,6 @@ TEST(chars, mapset_255)
 
     r1 = map_characters(dst1, src, input_set, output_set);
     EXPECT_EQ(r1, 0);
-    // for (int i=0;i<strlen(src); i++) {
-    //     printf("dst1[%d] = %x\n",i, dst1[i] & 0xff);
-    // }
     EXPECT_EQ(strcmp(expected, dst1), 0);
 
     // Reverse it
@@ -491,8 +486,6 @@ TEST(radix, t3)
 TEST(radix, t4)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "9G0L29YNJ6";
     const char i_radix[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const char o_radix[] = "!\"#$%'()*+,./0123456789:<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz{}~";
@@ -501,8 +494,6 @@ TEST(radix, t4)
 
     std::vector<char> data(50);
   
-    printf("radix %d\n", strlen(o_radix));
-
    radix_test(src, i_radix, o_radix, expect);
 
    radix_test(expect, o_radix, i_radix, src);
@@ -512,8 +503,6 @@ TEST(radix, t4)
 TEST(radix, u32)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"0123456789";
@@ -540,8 +529,6 @@ TEST(radix, u32)
 TEST(radix, u32_b)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"0123456789";
@@ -568,9 +555,7 @@ TEST(radix, u32_b)
 TEST(radix, u32_c)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
-    char src[]      = "1234567890";
+     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"ÊËÌÍÎÏðñòó";
 
@@ -596,8 +581,6 @@ TEST(radix, u32_c)
 TEST(radix, u32_d)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
@@ -624,8 +607,6 @@ TEST(radix, u32_d)
 TEST(radix, u32_e)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
@@ -652,8 +633,6 @@ TEST(radix, u32_e)
 TEST(radix, u32_f)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"ĵĶķĸĹϺϻϼϽϾ";
@@ -678,8 +657,6 @@ TEST(radix, u32_f)
 TEST(radix, u32_g)
 {
     unsigned long long r1 = 0;
-    // char src[]      = "959223218629794";
-    //  const char i_radix[] = "0123456789";
     char src[]      = "1234567890";
     const char i_radix[] = "0123456789";
     const wchar_t o_radix[] = L"012345678Ͼ";
@@ -714,62 +691,8 @@ TEST(radix, quick_test)
     r1 = __bigint_set_str(&n, data, input_radix);
     ASSERT_EQ(r1, 0);
 
-    gmp_printf("%Zd\n", n);
+    // gmp_printf("%Zd\n", n);
   
     bigint_deinit(&n);
 }
 
-#ifdef NODEF
-TEST(radix, negative)
-{
-    bigint_t n;
-    bigint_t den;
-    int r1(0);
-    int r2(0);
-    int r3(0);
-    std::vector<char> output;
-
-    const char numerator []= "-14103068008475998766";
-    const char denominator []= "10000";
-    const char input_radix [] = "0123456789";
-    bigint_init(&n);
-    bigint_init(&den);
-
-    r1 = bigint_set_str(&n, numerator, 10);
-    ASSERT_EQ(r1, 0);
-
-    r1 = bigint_set_str(&den, denominator, 10);
-    ASSERT_EQ(r1, 0);
-
-    output.resize(50);
-
-    r2 = bigint_get_str(output.data(), output.size(), 10, &n);
-    EXPECT_EQ(r2, 0);
-//    EXPECT_EQ(strcmp(output.data(), data), 0);
-
-    r2 = bigint_get_str(output.data(), output.size(), 10, &den);
-    EXPECT_EQ(r2, 0);
-    EXPECT_EQ(strcmp(output.data(), denominator), 0);
-
-    bigint_mod(&n, &n, &den);
-    EXPECT_EQ(r3, 0);
-    
-    r2 = bigint_get_str(output.data(), output.size(), 10, &n);
-    EXPECT_EQ(r2, 0);
-    std::cout << output.data() << std::endl;
-
-    bigint_deinit(&n);
-    bigint_deinit(&den);
-}
-
-TEST(radix, negative2)
-{
-    int num = -100;
-    int den = 98;
-
-    int r = num % den;
-
-    std::cout << r << std::endl;
-
-}
-#endif

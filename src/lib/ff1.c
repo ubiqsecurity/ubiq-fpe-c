@@ -97,7 +97,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
                const int encrypt)
 {
     const char * csu = "ff1_cipher";
-        int debug = 0;
+    int debug_flag = 0;
 
     // Input character set may be non-standard or even UTF8.
 
@@ -112,7 +112,7 @@ int ff1_cipher(struct ff1_ctx * const ctx,
     if (ctx->ffx.custom_radix_str) {
         X = calloc(strlen(_X) + 1, sizeof(char));
         map_characters(X, _X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
-        (debug) && printf("%s _X(%s) X(%s) radix(%s) std(%s) \n", csu, _X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));
+        DEBUG(debug_flag,printf("%s _X(%s) X(%s) radix(%s) std(%s) \n", csu, _X, X, ctx->ffx.custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix)));
     } else if (ctx->ffx.u32_custom_radix_str) {
         X = calloc(u8_mbsnlen(_X, strlen(_X) + 1), sizeof(char));
         map_characters_from_u32(X, _X, ctx->ffx.u32_custom_radix_str, get_standard_bignum_radix(ctx->ffx.radix));

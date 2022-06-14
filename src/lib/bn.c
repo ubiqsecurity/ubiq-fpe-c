@@ -107,11 +107,11 @@ int __u32_bigint_set_str(bigint_t * const x,
 int __u32_bigint_get_str(uint32_t * const str, const size_t len,
                    const uint32_t * const alpha, const bigint_t * const _x)
 {
-    int debug = 0;
+    int debug_flag = 0;
     const char * csu = "__u32_bigint_get_str";
     const int rad = u32_strlen(alpha);
 
-    (debug) && printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha);
+    DEBUG(debug_flag,printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha));
    
    if (str == NULL) {
        return -EINVAL;
@@ -198,34 +198,34 @@ int __bigint_set_str(bigint_t * const x,
                      const char * const str, const char * const alpha)
 {
   static const char * csu = "__bigint_set_str";
-  int debug = 0;
+  int debug_flag = 0;
   int err = 0;
 
-  (debug) && printf("START DEBUG %s str(%s)   alpha(%s)\n", csu, str, alpha);
+  DEBUG(debug_flag,printf("START DEBUG %s str(%s)   alpha(%s)\n", csu, str, alpha));
 
 
-    const size_t rad = strlen(alpha);
-    
-    // Cannot make any assumption about the alpha character set.  Assume that the 
-    // character set does NOT match the expected bignum values.
-    size_t len = strlen(str);
-    char * mapped = calloc(len + 1, sizeof(char));
-    if (mapped == NULL) {
-        err = -ENOMEM;
-    } else {
-        mapped[len] = '\0';
-        (debug) && printf("%s set_str (%s)\n", csu, str);
-        err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
-        (debug) && printf(" %s mapped (%s)\n", csu, mapped);
-        if (!err) {
-            err = __bigint_set_str_radix(x, mapped, rad);
-            (debug) && gmp_printf("%s x %Zd\n", csu, x);
-        }
+  const size_t rad = strlen(alpha);
 
-    }
-    free(mapped);
+  // Cannot make any assumption about the alpha character set.  Assume that the 
+  // character set does NOT match the expected bignum values.
+  size_t len = strlen(str);
+  char * mapped = calloc(len + 1, sizeof(char));
+  if (mapped == NULL) {
+      err = -ENOMEM;
+  } else {
+      mapped[len] = '\0';
+      DEBUG(debug_flag,printf("%s set_str (%s)\n", csu, str));
+      err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
+      DEBUG(debug_flag,printf(" %s mapped (%s)\n", csu, mapped));
+      if (!err) {
+          err = __bigint_set_str_radix(x, mapped, rad);
+          DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
+      }
 
-  (debug) && printf("END DEBUG %s err(%d)\n\n", csu, err);
+  }
+  free(mapped);
+
+  DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
   return err;
 }
 
@@ -233,16 +233,16 @@ int __bigint_set_str_radix(bigint_t * const x,
                      const char * const str, const size_t radix)
 {
   static const char * csu = "__bigint_set_str_radix";
-  int debug = 0;
+  int debug_flag = 0;
   int err = 0;
 
-  (debug) && printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix);
+  DEBUG(debug_flag,printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix));
 
 
     if (radix <= 62) {
         // Assumption that the character set matches valid ranges for 2-62
         err = bigint_set_str(x, str, radix);
-        (debug) && gmp_printf("%s x %Zd\n", csu, x);
+        DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
     } else {
         const int len = strlen(str);
 
@@ -292,7 +292,7 @@ int __bigint_set_str_radix(bigint_t * const x,
         bigint_deinit(&a);
         bigint_deinit(&m);
     }
-  (debug) && printf("END DEBUG %s err(%d)\n\n", csu, err);
+  DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
   return err;
 }
 
@@ -308,25 +308,25 @@ int __bigint_get_str(char * const str, const size_t len,
 {
 
     static const char * csu = "__bigint_get_str";
-    int debug = 0;
+    int debug_flag = 0;
     const size_t rad = strlen(alpha);
     int err = 0;
 
-    (debug) && printf("START DEBUG %s rad(%d)\n", csu, rad);
+    DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, rad));
 
 
-    (debug) && printf("DEBUG %s len(%d)\n", csu, len);
-    (debug) && printf("DEBUG %s alpha(%s)\n", csu, alpha);
+    DEBUG(debug_flag,printf("DEBUG %s len(%d)\n", csu, len));
+    DEBUG(debug_flag,printf("DEBUG %s alpha(%s)\n", csu, alpha));
     err = __bigint_get_str_radix(str, len, rad, _x);
-    (debug) && gmp_printf("__bigint_get_str   _x %Zd\n", _x);
+    DEBUG(debug_flag,gmp_printf("__bigint_get_str   _x %Zd\n", _x));
     if (!err) {
-        (debug) && printf("__bigint_get_str  str BEFORE(%s)\n", str);
+        DEBUG(debug_flag,printf("__bigint_get_str  str BEFORE(%s)\n", str));
         err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
-        (debug) && printf("__bigint_get_str  str  AFTER(%s)\n", str);
+        DEBUG(debug_flag,printf("__bigint_get_str  str  AFTER(%s)\n", str));
     }
 
-    (debug) && printf("DEBUG %s err(%d)\n", csu, err);
-    (debug) && printf("DEBUG %s s(%s)\n", csu, str);
+    DEBUG(debug_flag,printf("DEBUG %s err(%d)\n", csu, err));
+    DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
     return err;
 }
 
@@ -335,10 +335,10 @@ int __bigint_get_str_radix(char * const str, const size_t len,
 {
 
   static const char * csu = "__bigint_get_str_radix";
-  int debug = 0;
+  int debug_flag = 0;
   int err = 0;
 
-  (debug) && printf("START DEBUG %s rad(%d)\n", csu, radix);
+  DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, radix));
 
   if (radix <= 62) {
 
@@ -388,15 +388,15 @@ int __bigint_get_str_radix(char * const str, const size_t len,
          */
         ffx_revb(str, str, i);
     }
-    (debug) && printf("DEBUG %s s(%s)\n", csu, str);
+    DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
 
     bigint_deinit(&x);
-    (debug) && printf("DEBUG %s ret(%d)\n", csu, i);
+    DEBUG(debug_flag,printf("DEBUG %s ret(%d)\n", csu, i));
     if (!err && i > len) {
         err = -ENOMEM;
     }
   }
-  (debug) && printf("END DEBUG %s err(%d) str(%s) \n\n", csu, err, str);
+  DEBUG(debug_flag,printf("END DEBUG %s err(%d) str(%s) \n\n", csu, err, str));
   return err;
 
 }
@@ -408,22 +408,22 @@ int map_characters(char * const dst, const char * const src,
     const char * const dst_chars) 
 {
     const char * csu = "map_characters";
-    int debug = 0;
+    int debug_flag = 0;
 
-    (debug) && printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars);
+    DEBUG(debug_flag,printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars));
 
     size_t len = strlen(src);
     for (int i = 0; i < len; i++) {
         char * pos = strchr(src_chars, src[i]);
-        (debug) && printf("%s %d %c\n", csu, i, *pos);
+        DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
         if (!pos) {
-            (debug) && printf("Unable to find %c \n", src[i]);
+            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             return -EINVAL;
         }
-        (debug) && printf("%s %d %c\n", csu, i, *pos);
+        DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
         dst[i] = dst_chars[pos - src_chars];
     }
-    (debug) && printf("%s dst(%s)\n", csu, dst);
+    DEBUG(debug_flag,printf("%s dst(%s)\n", csu, dst));
     return 0;
 }
 
@@ -431,19 +431,19 @@ int map_characters_from_u32(char * const dst, const uint8_t * const src,
     const uint32_t * const src_chars,
     const char * const dst_chars) 
 {
-    int debug = 0;
+    int debug_flag = 0;
     uint32_t * tmp = NULL;
     size_t src_len = 0;
 
-    (debug) && printf("src_chars (%S) len(%d)\n", src_chars, u32_strlen(src_chars));
+    DEBUG(debug_flag,printf("src_chars (%S) len(%d)\n", src_chars, u32_strlen(src_chars)));
     tmp = u8_to_u32(src, u8_strlen(src) + 1, NULL, &src_len);
-    (debug) && printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len);
+    DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
 
 //    size_t len = strlen(src);
     for (int i = 0; i < src_len - 1; i++) {
         uint32_t * pos = u32_strchr(src_chars, tmp[i]);
         if (!pos) {
-            (debug) && printf("Unable to find %c \n", src[i]);
+            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             return -EINVAL;
         }
         dst[i] = dst_chars[pos - src_chars];
@@ -458,20 +458,20 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
     const uint32_t * const dst_chars) 
 {
     int res = 0;
-    int debug = 0;
+    int debug_flag = 0;
     size_t src_len = strlen(src);
     uint32_t * tmp = calloc(src_len + 1, sizeof(uint32_t));
 
-    (debug) && printf("dst_chars (%S) len(%d)\n", dst_chars, u32_strlen(dst_chars));
-    // (debug) && printf("src_chars (%S) len(%d)\n", src_chars, src_len);
+    DEBUG(debug_flag,printf("dst_chars (%S) len(%d)\n", dst_chars, u32_strlen(dst_chars)));
+    // DEBUG(debug_flag,printf("src_chars (%S) len(%d)\n", src_chars, src_len));
 //    tmp = u8_to_u32(src, u8_strlen(src) + 1, NULL, &src_len);
-    // (debug) && printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len);
+    // DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
 
 //    size_t len = strlen(src);
     for (int i = 0; i < src_len ; i++) {
         char * pos = strchr(src_chars, src[i]);
         if (!pos) {
-            (debug) && printf("Unable to find %c \n", src[i]);
+            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             return -EINVAL;
         }
         tmp[i] = dst_chars[pos - src_chars];
@@ -484,7 +484,7 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
         res = -ENOMEM;
     }
 //    dst[src_len] = '\0';
-    // (debug) && printf("dst (%S) tmp(%S) src_len(%d)\n", dst, tmp, src_len);
+    // DEBUG(debug_flag,printf("dst (%S) tmp(%S) src_len(%d)\n", dst, tmp, src_len));
     free(tmp);
     return res;
 }
