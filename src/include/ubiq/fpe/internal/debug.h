@@ -1,12 +1,12 @@
 #ifndef UBIQ_FPE_DEBUG_H
 #define UBIQ_FPE_DEBUG_H
 
-// #define DEBUG_ON // UNCOMMENT to Enable DEBUG macro
+// #define FPE_DEBUG_ON // UNCOMMENT to Enable FPE_DEBUG macro
 
-#ifdef DEBUG_ON
-#define DEBUG(x,y) {x && y;}
+#ifdef FPE_DEBUG_ON
+#define FPE_DEBUG(x,y) {x && y;}
 #else
-#define DEBUG(x,y)
+#define FPE_DEBUG(x,y)
 #endif
 
 

@@ -111,7 +111,7 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
     const char * const csu = "__u32_bigint_get_str";
     const int rad = u32_strlen(alpha);
 
-    DEBUG(debug_flag,printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha));
+    FPE_DEBUG(debug_flag,printf("%s len(%d) rad(%d) alpha(%S) \n", csu, len, rad, alpha));
    
    if (str == NULL) {
        return -EINVAL;
@@ -155,7 +155,7 @@ int __u32_bigint_get_str(uint32_t * const str, const size_t len,
 
     // Make sure to set null terminator
     str[i] = '\0';
-    DEBUG(debug_flag,wprintf(L"__u32_bigint_get_str str(%S)\n",str));
+    FPE_DEBUG(debug_flag,wprintf(L"__u32_bigint_get_str str(%S)\n",str));
     if (i <= len) {
         /*
          * to simplify conversion from a numbers to a string,
@@ -201,7 +201,7 @@ int __bigint_set_str(bigint_t * const x,
   int debug_flag = 0;
   int err = 0;
 
-  DEBUG(debug_flag,printf("START DEBUG %s str(%s)   alpha(%s)\n", csu, str, alpha));
+  FPE_DEBUG(debug_flag,printf("START DEBUG %s str(%s)   alpha(%s)\n", csu, str, alpha));
 
 
   const size_t rad = strlen(alpha);
@@ -214,18 +214,18 @@ int __bigint_set_str(bigint_t * const x,
       err = -ENOMEM;
   } else {
       mapped[len] = '\0';
-      DEBUG(debug_flag,printf("%s set_str (%s)\n", csu, str));
+      FPE_DEBUG(debug_flag,printf("%s set_str (%s)\n", csu, str));
       err = map_characters(mapped, str, alpha, get_standard_bignum_radix(rad));
-      DEBUG(debug_flag,printf(" %s mapped (%s)\n", csu, mapped));
+      FPE_DEBUG(debug_flag,printf(" %s mapped (%s)\n", csu, mapped));
       if (!err) {
           err = __bigint_set_str_radix(x, mapped, rad);
-          DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
+          FPE_DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
       }
 
   }
   free(mapped);
 
-  DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
+  FPE_DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
   return err;
 }
 
@@ -236,13 +236,13 @@ int __bigint_set_str_radix(bigint_t * const x,
   int debug_flag = 0;
   int err = 0;
 
-  DEBUG(debug_flag,printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix));
+  FPE_DEBUG(debug_flag,printf("START DEBUG %s str(%s)   radix(%s)\n", csu, str, radix));
 
 
   if (radix <= 62) {
       // Assumption that the character set matches valid ranges for 2-62
       err = bigint_set_str(x, str, radix);
-      DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
+      FPE_DEBUG(debug_flag,gmp_printf("%s x %Zd\n", csu, x));
   } else {
       const int len = strlen(str);
 
@@ -291,7 +291,7 @@ int __bigint_set_str_radix(bigint_t * const x,
       bigint_deinit(&a);
       bigint_deinit(&m);
   }
-  DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
+  FPE_DEBUG(debug_flag,printf("END DEBUG %s err(%d)\n\n", csu, err));
   return err;
 }
 
@@ -311,18 +311,18 @@ int __bigint_get_str(char * const str, const size_t len,
   const size_t rad = strlen(alpha);
   int err = 0;
 
-  DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, rad));
+  FPE_DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, rad));
 
-  DEBUG(debug_flag,printf("DEBUG %s len(%d)\n", csu, len));
-  DEBUG(debug_flag,printf("DEBUG %s alpha(%s)\n", csu, alpha));
+  FPE_DEBUG(debug_flag,printf("DEBUG %s len(%d)\n", csu, len));
+  FPE_DEBUG(debug_flag,printf("DEBUG %s alpha(%s)\n", csu, alpha));
   err = __bigint_get_str_radix(str, len, rad, _x);
-  DEBUG(debug_flag,gmp_printf("__bigint_get_str   _x %Zd\n", _x));
+  FPE_DEBUG(debug_flag,gmp_printf("__bigint_get_str   _x %Zd\n", _x));
   if (!err) {
       err = map_characters(str, str, get_standard_bignum_radix(rad), alpha);
   }
 
-  DEBUG(debug_flag,printf("DEBUG %s err(%d)\n", csu, err));
-  DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
+  FPE_DEBUG(debug_flag,printf("DEBUG %s err(%d)\n", csu, err));
+  FPE_DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
   return err;
 }
 
@@ -334,7 +334,7 @@ int __bigint_get_str_radix(char * const str, const size_t len,
   int debug_flag = 0;
   int err = 0;
 
-  DEBUG(debug_flag,printf("START DEBUG %s rad(%d)\n", csu, radix));
+  FPE_DEBUG(debug_flag,printf("START FPE_DEBUG %s rad(%d)\n", csu, radix));
 
   if (radix <= 62) {
 
@@ -384,15 +384,15 @@ int __bigint_get_str_radix(char * const str, const size_t len,
          */
         ffx_revb(str, str, i);
     }
-    DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
+    FPE_DEBUG(debug_flag,printf("DEBUG %s s(%s)\n", csu, str));
 
     bigint_deinit(&x);
-    DEBUG(debug_flag,printf("DEBUG %s ret(%d)\n", csu, i));
+    FPE_DEBUG(debug_flag,printf("DEBUG %s ret(%d)\n", csu, i));
     if (!err && i > len) {
         err = -ENOMEM;
     }
   }
-  DEBUG(debug_flag,printf("END DEBUG %s err(%d) str(%s) \n\n", csu, err, str));
+  FPE_DEBUG(debug_flag,printf("END DEBUG %s err(%d) str(%s) \n\n", csu, err, str));
   return err;
 
 }
@@ -406,20 +406,20 @@ int map_characters(char * const dst, const char * const src,
     const char * const csu = "map_characters";
     int debug_flag = 0;
 
-    DEBUG(debug_flag,printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars));
+    FPE_DEBUG(debug_flag,printf("%s src(%s) strlen(%d) src_chars (%s) len(%d) dst_chars(%s)\n", csu, src, strlen(src), src_chars, strlen(src_chars), dst_chars));
 
     size_t len = strlen(src);
     for (int i = 0; i < len; i++) {
         char * pos = strchr(src_chars, src[i]);
-        DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
+        FPE_DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
         if (!pos) {
-            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
+            FPE_DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             return -EINVAL;
         }
-        DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
+        FPE_DEBUG(debug_flag,printf("%s %d %c\n", csu, i, *pos));
         dst[i] = dst_chars[pos - src_chars];
     }
-    DEBUG(debug_flag,printf("%s dst(%s)\n", csu, dst));
+    FPE_DEBUG(debug_flag,printf("%s dst(%s)\n", csu, dst));
     return 0;
 }
 
@@ -431,14 +431,14 @@ int map_characters_from_u32(char * const dst, const uint8_t * const src,
     uint32_t * tmp = NULL;
     size_t src_len = 0;
 
-    DEBUG(debug_flag,printf("src_chars (%S) len(%d)\n", src_chars, u32_strlen(src_chars)));
+    FPE_DEBUG(debug_flag,printf("src_chars (%S) len(%d)\n", src_chars, u32_strlen(src_chars)));
     tmp = u8_to_u32(src, u8_strlen(src) + 1, NULL, &src_len);
-    DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
+    FPE_DEBUG(debug_flag,printf("tmp (%S) len(%d) src_len(%d)\n", tmp, u32_strlen(tmp), src_len));
 
     for (int i = 0; i < src_len - 1; i++) {
         uint32_t * pos = u32_strchr(src_chars, tmp[i]);
         if (!pos) {
-            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
+            FPE_DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             free(tmp);
             return -EINVAL;
         }
@@ -457,12 +457,12 @@ int map_characters_to_u32(uint8_t * const dst, const char * const src,
     size_t src_len = strlen(src);
     uint32_t * tmp = calloc(src_len + 1, sizeof(uint32_t));
 
-    DEBUG(debug_flag,printf("dst_chars (%S) len(%d)\n", dst_chars, u32_strlen(dst_chars)));
+    FPE_DEBUG(debug_flag,printf("dst_chars (%S) len(%d)\n", dst_chars, u32_strlen(dst_chars)));
 
     for (int i = 0; i < src_len ; i++) {
         char * pos = strchr(src_chars, src[i]);
         if (!pos) {
-            DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
+            FPE_DEBUG(debug_flag,printf("Unable to find %c \n", src[i]));
             free(tmp);
             return -EINVAL;
         }
