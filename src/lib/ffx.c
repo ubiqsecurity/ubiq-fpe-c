@@ -1,6 +1,9 @@
 #include <ubiq/fpe/internal/ffx.h>
 
 #include <math.h>
+#include <unistr.h>
+#include <uniwidth.h>
+#include <wchar.h>
 
 /*
  * This function is intended to be used to create a context for
@@ -34,12 +37,12 @@ int ffx_ctx_create(void ** const _ctx,
         return -EINVAL;
     }
 
-    /*
-     * FF1 and FF3-1 support a radix up to 65536, but the
-     * implementation becomes increasingly difficult and
-     * less useful in practice after the limits below.
-     */
-    if (radix < 2 || radix > 36) {
+    // /*
+    //  * FF1 and FF3-1 support a radix up to 65536, but the
+    //  * implementation becomes increasingly difficult and
+    //  * less useful in practice after the limits below.
+    //  */
+    if (radix < 2 || radix > 255) {
         return -EINVAL;
     }
 
@@ -76,14 +79,18 @@ int ffx_ctx_create(void ** const _ctx,
      * allocation or the allocation of the evp context
      * fails
      */
-    *_ctx = malloc(len + keylen + twklen);
+    *_ctx = malloc(len + twklen);
     if (*_ctx) {
         ctx = (void *)((uint8_t *)*_ctx + off);
 
         ctx->ciph = ciph;
         ctx->evp = EVP_CIPHER_CTX_new();
         if (ctx->evp) {
+            static const uint8_t IV[16] = { 0 };
+
             ctx->radix = radix;
+            ctx->custom_radix_str = NULL;
+            ctx->u32_custom_radix_str = NULL;
 
             ctx->txtlen.min = mintxtlen;
             ctx->txtlen.max = maxtxtlen;
@@ -91,13 +98,17 @@ int ffx_ctx_create(void ** const _ctx,
             ctx->twklen.min = mintwklen;
             ctx->twklen.max = maxtwklen;
 
-            ctx->key.buf = (uint8_t *)(ctx + 1);
-            ctx->key.len = keylen;
-            memcpy(ctx->key.buf, keybuf, keylen);
-
-            ctx->twk.buf = ctx->key.buf + keylen;
+            ctx->twk.buf = (uint8_t *)(ctx + 1);
             ctx->twk.len = twklen;
             memcpy(ctx->twk.buf, twkbuf, twklen);
+
+            /*
+             * allocate and initialize the EVP with the key. the
+             * IV is a constant string of 0's for both ff1 and ff3-1
+             */
+            EVP_EncryptInit_ex(ctx->evp, ctx->ciph, NULL, keybuf, IV);
+            /* don't do any padding */
+            EVP_CIPHER_CTX_set_padding(ctx->evp, 0);
         } else {
             free(*_ctx);
             return -ENOMEM;
@@ -107,17 +118,52 @@ int ffx_ctx_create(void ** const _ctx,
     return 0;
 }
 
+int ffx_ctx_create_custom_radix_str(void ** const _ctx,
+                   const size_t len, const size_t off,
+                   const uint8_t * const keybuf, const size_t keylen,
+                   const uint8_t * const twkbuf, const size_t twklen,
+                   const size_t maxtxtlen,
+                   const size_t mintwklen, const size_t maxtwklen,
+                   const uint8_t * const custom_radix_str) 
+{
+    // Get the number of bytes in the custom radix string
+    size_t radix_len = strlen(custom_radix_str);
+    // Get the number of UTF8 characters in the custom radix string
+    size_t radix_u8_mbsnlen = u8_mbsnlen(custom_radix_str, radix_len);
+
+    int x = ffx_ctx_create(_ctx, len, off,keybuf, keylen, twkbuf,twklen,maxtxtlen, mintwklen, maxtwklen, radix_u8_mbsnlen);
+    if (!x) {
+        struct ffx_ctx * ctx = (void *)((uint8_t *)*_ctx + off);
+
+        // If the radix string contains multibyte values, then create the u32_version
+        // else simply use the custom radix string.
+        if (radix_len == radix_u8_mbsnlen) {
+            ctx->custom_radix_str = strdup(custom_radix_str);
+            ctx->u32_custom_radix_str = NULL;
+        } else {
+            uint32_t * tmp = NULL;
+            size_t lengthp = 0;
+            ctx->custom_radix_str = NULL;
+            tmp = u8_to_u32(custom_radix_str, u8_strlen(custom_radix_str) + 1, NULL, &lengthp);
+            if (tmp != NULL) {
+                ctx->u32_custom_radix_str = tmp;
+            }
+        }
+    }
+    return x;
+
+}
+
 void ffx_ctx_destroy(void * const _ctx, const size_t off)
 {
     struct ffx_ctx * const ctx = (void *)((uint8_t *)_ctx + off);
-
-    /*
-     * wipe out the key, but the tweak was already
-     * public, so no need to wipe it out
-     */
-    memset(ctx->key.buf, 0, ctx->key.len);
     EVP_CIPHER_CTX_free(ctx->evp);
-
+    if (ctx->custom_radix_str) {
+        free(ctx->custom_radix_str);
+    }
+    if (ctx->u32_custom_radix_str) {
+        free(ctx->u32_custom_radix_str);
+    }
     free(_ctx);
 }
 
@@ -192,15 +238,21 @@ int ffx_str(char * const str, const size_t len,
 {
     int res;
 
+    // TODO - this should be based on call to get zeroth character of std radix string for radix value
+    char c = '0';
+    if (r > 62) {
+        c = '\x01';
+    }
+
     res = -EINVAL;
     if (bigint_cmp_si(n, 0) >= 0) {
-        res = bigint_get_str(str, len, r, n);
+        res = __bigint_get_str_radix(str, len, r, n);
         if (res == 0) {
             const size_t len = strlen(str);
 
             if (len < m) {
                 memmove(str + (m - len), str, len + 1);
-                memset(str, '0', m - len);
+                memset(str, c, m - len);
             } else if (len > m) {
                 res = -EOVERFLOW;
             }
@@ -209,6 +261,7 @@ int ffx_str(char * const str, const size_t len,
 
     return res;
 }
+
 
 /*
  * perform a byte-wise exclusive-or operation over the sequence
@@ -224,16 +277,23 @@ void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len)
 {
-    while (len) {
-        *(uint8_t *)d = *(uint8_t *)s1 ^ *(uint8_t *)s2;
+#define MEMXOR(TYPE, DST, S1, S2, BYTES)                        \
+    do {                                                        \
+        if ((((uintptr_t)(DST) |                                \
+              (uintptr_t)(S1) |                                 \
+              (uintptr_t)(S2)) & (sizeof(TYPE) - 1)) == 0) {    \
+            while (BYTES >= sizeof(TYPE)) {                     \
+                *(TYPE *)(DST) = *(TYPE *)(S1) ^ *(TYPE *)(S2); \
+                (DST) = (TYPE *)(DST) + 1;                      \
+                (S1) = (TYPE *)(S1) + 1;                        \
+                (S2) = (TYPE *)(S2) + 1;                        \
+                (BYTES) -= sizeof(TYPE);                        \
+            }                                                   \
+        }                                                       \
+    } while (0)
 
-        d = (uint8_t *)d + 1;
-
-        s1 = (uint8_t *)s1 + 1;
-        s2 = (uint8_t *)s2 + 1;
-
-        len--;
-    }
+    MEMXOR(uint64_t, d, s1, s2, len);
+    MEMXOR(uint8_t, d, s1, s2, len);
 
     return d;
 }
@@ -250,19 +310,20 @@ int ffx_prf(struct ffx_ctx * const ctx,
             uint8_t * const dst,
             const uint8_t * const src, const size_t len)
 {
-    static const uint8_t IV[16] = { 0 };
-
+    EVP_CIPHER_CTX * evp;
     int dstl;
 
     if (len % 16) {
         return -EINVAL;
     }
 
-    EVP_CIPHER_CTX_reset(ctx->evp);
-    EVP_EncryptInit_ex(ctx->evp, ctx->ciph, NULL, ctx->key.buf, IV);
-
-    /* don't do any padding */
-    EVP_CIPHER_CTX_set_padding(ctx->evp, 0);
+    /*
+     * the key was already set into the context. we can just
+     * copy the initialized structure into this new one
+     * to avoid the overhead of initialization every time
+     */
+    evp = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_copy(evp, ctx->evp);
 
     /*
      * this function only returns the last encrypted block,
@@ -272,17 +333,20 @@ int ffx_prf(struct ffx_ctx * const ctx,
      * as the source)
      */
     for (unsigned int i = 0; i < len; i += 16) {
-        EVP_EncryptUpdate(ctx->evp, dst, &dstl, &src[i], 16);
+        EVP_EncryptUpdate(evp, dst, &dstl, &src[i], 16);
     }
 
     /*
      * final doesn't output anything since there is no padding;
      * however, the output length parameter must still be valid
      */
-    EVP_EncryptFinal_ex(ctx->evp, NULL, &dstl);
+    EVP_EncryptFinal_ex(evp, NULL, &dstl);
+    EVP_CIPHER_CTX_free(evp);
 
     return 0;
 }
+
+
 
 /*
  * perform an aes-ecb encryption of @src using the supplied @ctx.

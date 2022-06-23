@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 #include <ubiq/fpe/ff1.h>
+#include <ubiq/fpe/internal/bn.h>
+
+#include <unistr.h>
 
 static
 void ff1_test(const uint8_t * const K, const size_t k,
@@ -19,10 +22,40 @@ void ff1_test(const uint8_t * const K, const size_t k,
     EXPECT_EQ(res, 0);
     if (res == 0) {
         EXPECT_EQ(ff1_encrypt(ctx, out, PT, NULL, 0), 0);
-        EXPECT_EQ(strcmp(out, CT), 0);
+        EXPECT_EQ(strcmp(out, CT), 0) << "  out(" << out << ")   CT(" << CT << ")";
 
         EXPECT_EQ(ff1_decrypt(ctx, out, CT, NULL, 0), 0);
         EXPECT_EQ(strcmp(out, PT), 0);
+
+        ff1_ctx_destroy(ctx);
+    }
+
+    free(out);
+}
+
+static
+void ff1_test_custom_radix(const uint8_t * const K, const size_t k,
+              const uint8_t * const T, const size_t t,
+              const char * const PT, const char * const CT,
+              const char * const radix_str)
+{
+    struct ff1_ctx * ctx;
+    char * out;
+    int res;
+
+    ASSERT_EQ(u8_mbsnlen((uint8_t *)PT, strlen(PT)), u8_mbsnlen((uint8_t *)CT,strlen(CT)));
+    out = (char *)calloc(4 * (strlen(PT) + 1), sizeof(char));
+    ASSERT_NE(out, nullptr);
+
+
+    res = ff1_ctx_create_custom_radix(&ctx, K, k, T, t, 0, SIZE_MAX, (uint8_t*)radix_str);
+    EXPECT_EQ(res, 0);
+    if (res == 0) {
+        EXPECT_EQ(ff1_encrypt(ctx, out, PT, NULL, 0), 0);
+        EXPECT_EQ(strcmp(out, CT), 0) << "  out(" << out << ")   CT(" << CT << ")";
+
+        EXPECT_EQ(ff1_decrypt(ctx, out, CT, NULL, 0), 0);
+        EXPECT_EQ(strcmp(out, PT), 0) << "  out(" << out << ")   PT(" << PT << ")";
 
         ff1_ctx_destroy(ctx);
     }
@@ -43,6 +76,24 @@ TEST(ff1, nist1)
     const char CT[] = "2433477484";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
+}
+
+TEST(ff1, nist1_custom_radix)
+{
+    const uint8_t K[] = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+    };
+
+    const uint8_t T[] = {};
+
+    // Radix moved characters one higher (to right one character)
+    const char PT[] = "1234567890";
+    const char CT[] = "3544588595";
+    const char radix[] = "1234567890";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
 }
 
 TEST(ff1, nist2)
@@ -60,6 +111,25 @@ TEST(ff1, nist2)
     const char CT[] = "6124200773";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
+}
+
+TEST(ff1, nist2_custom_radix)
+{
+    const uint8_t K[] = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+    };
+
+    const uint8_t T[] = {
+        0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30,
+    };
+
+    const char PT[] = "2345678901";
+    const char CT[] = "8346422995";
+    const char radix[] = "2345678901";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
 }
 
 TEST(ff1, nist3)
@@ -77,6 +147,7 @@ TEST(ff1, nist3)
     const char CT[] = "a9tv40mll9kdu509eum";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(36));
 }
 
 TEST(ff1, nist4)
@@ -93,6 +164,7 @@ TEST(ff1, nist4)
     const char CT[] = "2830668132";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
 }
 
 TEST(ff1, nist5)
@@ -111,6 +183,7 @@ TEST(ff1, nist5)
     const char CT[] = "2496655549";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
 }
 
 TEST(ff1, nist6)
@@ -129,6 +202,7 @@ TEST(ff1, nist6)
     const char CT[] = "xbj3kv35jrawxv32ysr";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(36));
 }
 
 TEST(ff1, nist7)
@@ -146,6 +220,7 @@ TEST(ff1, nist7)
     const char CT[] = "6657667009";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
 }
 
 TEST(ff1, nist8)
@@ -165,6 +240,7 @@ TEST(ff1, nist8)
     const char CT[] = "1001623463";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
 }
 
 TEST(ff1, nist9)
@@ -184,6 +260,7 @@ TEST(ff1, nist9)
     const char CT[] = "xs8a0azh2avyalyzuwd";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 36);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(36));
 }
 
 TEST(ff1, base2)
@@ -205,6 +282,7 @@ TEST(ff1, base2)
     const char CT[] = "10110101001110101101110000011000000011111100111";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base2_a)
@@ -226,6 +304,7 @@ TEST(ff1, base2_a)
     const char CT[] = "111110001101110010010110001010100001101011001010011010111001001101101000011110000110110000001101011110101100001101000011101110110101001111100001011010010000010111001110010011001100001111100101";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base2_b)
@@ -247,6 +326,7 @@ TEST(ff1, base2_b)
     const char CT[] = "00110011001000111100010111110001000110110110010010101101001011101001101010010001111001010100100001110101010101101110110010100110101110111011111010110010101110000001101000101010100011010100111011000";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base2_c)
@@ -268,6 +348,7 @@ TEST(ff1, base2_c)
     const char CT[] = "10101101001111110110110001010101110111011010101001110011111101101101000001110010100110110011011101000101010001111101100000110000101110000000110001011000100000111001111011101011100011100010100001010011110100010001001000001101110010110111100010101001000100100000010111100000101000010100011001100011111110011100111110011100111111011001101011100010100110001100111000100000101011111110100011110011101001010110001000011010011011101001101000001100110100";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base2_d)
@@ -289,6 +370,7 @@ TEST(ff1, base2_d)
     const char CT[] = "0101111000110110000111000111011100110111101000100000100010100110100010001101000101111000100000111000000011110111001001101010100001111100100101100100000000000011100011110010100010000010001001101100011100111110101110000101111010100111100000111000000111011011010101111100110101000110001110110001110011111000111110010000100010000101010110000010010100001111011010110111011111101000100000010111101010000011011110001000000011111010110010100101001000111101110";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base2_e)
@@ -310,6 +392,7 @@ TEST(ff1, base2_e)
     const char CT[] = "0000010100010011101101101111101011010101110011111000100110100110001101001001111110001100001010111011001001101100011110010111111111100011111111111011100000101000000101101100011001110110011011110111011101101111110110000101000011111101100100100101010110111010101111001011000001100000100000110110110111001101010101001111101111010111010111001101101000000101100001000100100001111001001001001000001010010000101000110111010010000010010101000000111111101001011101111111000100101001100110001111001101110001010110011000000000101011001010110110011101100111001110010111011010101110100100111010111000010011010000001001001111110110001110010110111101101000001100101101100010101101010110010001001110010001100110101100011001010010011001100101010001111010100000101010011111010001110110000111101010111111101101001001110001110110111111100101001010110010011000011111110111110000010010110110111100110101000111000011010100100001101001010001110000011110001110101001010110011111100010001011001110110100000001010001010101001000011000001010010001110110001011000010010011111011101001110010100101001000011111100011111111110000110111001101101001111111010011011110101101011111010010101000100011010011111010100101011001100110110101011110110000010110111101001100000001011000010000110111100111110001101011011000010010011111101010001100010010001100111111110011101000111110101001100011010100100110110111010010010001100001101000111000000010000111101010001011111100011111001111000111001110100110010110000101000100001000001100100000100101011001000001011010000000000011100110001001011111001011101010100001101101000111101010111000101001000001100011110000101111100110110100001111001110011111111000100011000010000000110110101011101001010000001011010010101111101100100011110101110101110101010110001110100000000010100011000111011011110100111111111100";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 2);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, "01");
 }
 
 TEST(ff1, base10_a)
@@ -331,4 +414,367 @@ TEST(ff1, base10_a)
     const char CT[] = "3553494089916656541184478908087049735544912674297349664796606620188730753059002844128234255625871546044854395209962926784724128560713512248808687211149744598195412712940468163774096628350620951413711803950518594617373351544393856373450320087523262022383945648127372062478231148038471844014871132794421592688429360388632538622007325709023114489620502858661369331722385345630805557726657301103731476891939356540625190861223831202018869059523597995303290074121079428721457071756416572728029177746810900307020259537765410201929963086982307837186509364236956511999350147323721010332857847774386067644233703989840323109138134072973241903156111826976160812600185129257000146824574348291127595725594892501619634508128488731892352987207154538043275865206720407431701986579498575764625682405793438116486315329904924734993624192175538907728005546006779836347751281158514862256352526481718064122564580367217956237464358103196538875291283690155429858297253893898279060676625001618108275714219171491371113956773762844941034947472026591341252339034136627998253233817606250024841230463067533567089935603756301565820369079927700758805948772321763265628871349903204249162513281402250087834393259987925784678440411900598614732588243252529912937631866659880744158524571625718103685314053287308120410823249151599910726383359255592539946379861183034458490744302067049236667020141763610651851768955009732517336400650838408764716423829225801720580144333813816604222676507183341558005308742505170406478517237115923457992442034329915124651627732600793249273733794088807416454414747271994796609670521986503851051553369292884493564374526214897996510458573439669519885826154261070811550077849422033063494354368756584234578197857360235955389059655914778268996127569020343877063422715737926819877510937231474460324658469989214234346399";
 
     ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 10);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(10));
+}
+
+
+TEST(ff1, base62)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[] = "1234567890ABCDEFabcdef";
+    const char CT[] = "6KNFyZss7SBQ7w7udUwsv8";
+
+    ff1_test(K, sizeof(K), T, sizeof(T), PT, CT, 62);
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, get_standard_bignum_radix(62));
+}
+
+TEST(ff1, base62_custom_radix)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = "3456789AB2CDEFGHcdefgh";
+    const char CT[] = "8MPH0buu9UDS9y9wfWyuxA";
+    const char radix[] = "23456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+
+TEST(ff1, base72_custom_radix)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = "1234567890ABCDEFabcdef";
+    const char CT[] = "x%$lEuv$QuA5HykL#2WZW0";
+    const char radix[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+
+TEST(ff1, base_long_radix_non_std)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[] = " 1234567890ABCDEFGHIJKLMNOP";
+    const char CT[] = "&4E+ZZ^}TF9+G/]]:E\"WV3|%3G]";
+//    const char CT[] = "&4E+ZZ^}TF9+G/]]:E\"WV3|%3G]";
+    const char radix[] = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+
+TEST(ff1, base_short_radix_non_std)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = "1-3%56789 ABCD\"FGHIJKLMNOP";
+    const char CT[]      = "KQmGM7H\"DLd1a1l%OOTD8CiCOD"; //6C36'*?16*481I=60K!5/4,<;7";
+    const char radix[] =   " 1-3%56789ABCD\"FGHIJKLMNOPQRSTUVWXYZabcdefghijklm";
+//     const char radix[] =   " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOP"; //NOPQRSTUVWXYZ[\\]^_`{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, base_short_radix_non_stdb)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = "1-3%56789 ABCD\"FGHIJKLMNOP";
+    const char CT[]      = "'OJ22H:+= I2L6ME-MEO%I0@:M"; //6C36'*?16*481I=60K!5/4,<;7";
+//    const char radix[] =   " 1-3%56789ABCD\"FGHIJKLMNOPQRSTUVWXYZabcdefghijklm";
+    const char radix[] =   " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOP"; //NOPQRSTUVWXYZ[\\]^_`{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, generic)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = "1-3%56789 ABCD\"FGHIJKLMNOP";
+    const char CT[]      = "(7I6S-pi4iT#G|7w\\BXBiJV(m\\"; //6C36'*?16*481I=60K!5/4,<;7";
+//    const char radix[] =   " 1-3%56789ABCD\"FGHIJKLMNOPQRSTUVWXYZabcdefghijklm";
+    const char radix[] =   " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+
+TEST(ff1, base_short_radix_std2)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = " 1234567890ABCDEFGHIJKLMNOP";
+    const char CT[]      = "EYCQ{|K`PYP1_AKZDMDOVGNCMTE";
+    const char radix[] =   " 1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, base_short_radix_std3)
+{
+    const uint8_t K[] = {
+        0xf4, 0xa1, 0x16, 0xd6, 0xee, 0x40, 0x6a, 0x53,
+        0xa5, 0x6c, 0xbe, 0x0f, 0x4a, 0xa7, 0xb1, 0x00,
+        0x1c, 0xdc, 0x0a, 0x55, 0xca, 0xc9, 0x63, 0xcf,
+        0x5a, 0xce, 0x39, 0x04, 0x88, 0xb3, 0x47, 0x7a
+    };
+    const uint8_t T[] = {
+        0xfd, 0x7f, 0x4b, 0x99, 0x45, 0xa3, 0xc5, 0x35,
+        0xad, 0xb4, 0x72, 0x00, 0x27, 0x11, 0x6c, 0xa0,
+        0xf4, 0x98, 0x7d, 0x7f, 0x3f, 0xdb, 0xa9, 0xbb,
+        0xc4, 0x0e, 0x75, 0x37, 0x5f, 0xea, 0xa6, 0x3c
+    };
+
+    const char PT[]      = " 1234567890ABCDEFGHIJKLMNOP";
+    const char CT[]      = ":Y@=\\?^V[)},4'KL4>{M,H75\"C8";
+    const char radix[] =   "  !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`{|}~";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, so_alphanum_po)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "1234";
+    const char CT[]      = "ZO7G";
+    const char radix[] =   " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, ascii8)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "0123456789abcABC";
+    const char CT[]      = "46b3 ðÏað43ÌÊ09B";
+    const char radix[] =   " 0123456789abcABCÊËÌÍÎÏðñòóô";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+
+TEST(ff1, ascii8_b)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "0123456789abcABCÊËÌÍÎÏðñòóô";
+    const char CT[]      = "Îô5Í21bñÊ2CAô6 CóB6ÊA00ðÍ8C";
+    const char radix[] =   " 0123456789abcABCÊËÌÍÎÏðñòóô";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, ascii8_c)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "ÊËÌÍÎÏðñòóô";
+    const char CT[]      = "C21A7bA47có";
+    const char radix[] =   " 0123456789abcABCÊËÌÍÎÏðñòóô";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, unicode)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "123456789abcABC";
+    const char CT[]      = "Ï3ËcϾķaó5Ͼ1Ϻ6cĹ";
+    const char radix[] =   " ÊËÌÍÎÏðñòóôĵĶķĸĹϺϻϼϽϾϿ0123456789abcABC";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, unicode_b)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "ĵĶķĸĹϺϻϼϽϾϿ";
+    const char CT[]      = "Ì9a ÏË8AÌÎË";
+    const char radix[] =   " ÊËÌÍÎÏðñòóôĵĶķĸĹϺϻϼϽϾϿ0123456789abcABC";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
+}
+
+TEST(ff1, unicode_c)
+{
+    const uint8_t K[] = {
+        0xeb, 0x7a, 0xd8, 0x17, 0x56, 0xd8, 0x4c, 0x67,
+        0x01, 0xb1, 0x5f, 0x5b, 0x68, 0x00, 0x3c, 0xbd, 
+        0x9d, 0x17, 0xf7, 0xf8, 0x03, 0x2a, 0x1a, 0x62,
+        0x4a, 0x30, 0x33, 0x87, 0xcc, 0x12, 0x36, 0x8e 
+    };
+    const uint8_t T[] = {
+        0xdc, 0x4d, 0x52, 0xaa, 0x15, 0xd8, 0x7e, 0x71, 
+        0x0d, 0xde, 0xa1, 0x76, 0x5e, 0x6a, 0x59, 0x48,
+        0x8f, 0x9d, 0xfe, 0x8d, 0x60, 0x36, 0x33, 0xff, 
+        0xc0, 0xb5, 0x95, 0xee, 0xfc, 0x23, 0x38, 0x80
+    };
+
+    const char PT[]      = "3456789abcABĵĶķĸĹϺϻϼϽϾϿ3456789abcAB";
+    const char CT[]      = "8ϾĵϺÎ1ϼ1óËĸA14430ϿCϺķϽϻĹ1245ķ2Ï2óô9";
+    const char radix[] =   " ÊËÌÍÎÏðñòóôĵĶķĸĹϺϻϼϽϾϿ0123456789abcABC";
+
+    ff1_test_custom_radix(K, sizeof(K), T, sizeof(T), PT, CT, radix);
 }

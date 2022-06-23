@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <ubiq/fpe/internal/bn.h>
+#include <ubiq/fpe/internal/debug.h>
 
 #include <openssl/evp.h>
 
@@ -36,19 +37,24 @@ void * ffx_memxor(void * d,
                   const void * s1, const void * s2,
                   size_t len);
 
+
 struct ffx_ctx
 {
     const EVP_CIPHER * ciph;
     EVP_CIPHER_CTX * evp;
 
     unsigned int radix;
+    char * custom_radix_str; // Radix character set - Not null if custom radix string is supplied.
+    // It is possible to have a custom radix string with a normally standard radix size (10,36,62, etc).
+    // If the custom radix string is not null, need to perform string mapping regardless of radix value
+    uint32_t * u32_custom_radix_str; // Only used in the custom radix string contains multibyte characters.
     struct {
         size_t min, max;
     } txtlen, twklen;
     struct {
         uint8_t * buf;
         size_t len;
-    } key, twk;
+    } twk;
 };
 
 int ffx_prf(struct ffx_ctx * const ctx,
@@ -63,6 +69,17 @@ int ffx_ctx_create(void ** const _ctx,
                    const size_t maxtxtlen,
                    const size_t mintwklen, const size_t maxtwklen,
                    const unsigned int radix);
+
+// Use a custom radix string.  radix string can be simple ascii7 or full utf8.  
+// Either one is handled internally.
+int ffx_ctx_create_custom_radix_str(void ** const _ctx,
+    const size_t len, const size_t off,
+    const uint8_t * const keybuf, const size_t keylen,
+    const uint8_t * const twkbuf, const size_t twklen,
+    const size_t maxtxtlen,
+    const size_t mintwklen, const size_t maxtwklen,
+    const uint8_t * const custom_radix_str);
+
 void ffx_ctx_destroy(void * const ctx, const size_t off);
 
 __END_DECLS
