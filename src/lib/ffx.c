@@ -83,7 +83,6 @@ int ffx_ctx_create(void ** const _ctx,
     if (*_ctx) {
         ctx = (void *)((uint8_t *)*_ctx + off);
 
-        ctx->ciph = ciph;
         ctx->evp = EVP_CIPHER_CTX_new();
         if (ctx->evp) {
             static const uint8_t IV[16] = { 0 };
@@ -106,7 +105,7 @@ int ffx_ctx_create(void ** const _ctx,
              * allocate and initialize the EVP with the key. the
              * IV is a constant string of 0's for both ff1 and ff3-1
              */
-            EVP_EncryptInit_ex(ctx->evp, ctx->ciph, NULL, keybuf, IV);
+            EVP_EncryptInit_ex(ctx->evp, ciph, NULL, keybuf, IV);
             /* don't do any padding */
             EVP_CIPHER_CTX_set_padding(ctx->evp, 0);
         } else {
@@ -260,42 +259,6 @@ int ffx_str(char * const str, const size_t len,
     }
 
     return res;
-}
-
-
-/*
- * perform a byte-wise exclusive-or operation over the sequence
- * of bytes pointed to by @s1 and @s2, storing the result into @d.
- * @len indicates the minimum number of bytes in @s1, @s2, and @d.
- *
- * @d may be equal to @s1 and/or @s2, but they may not overlap,
- * otherwise
- *
- * @d is returned
- */
-void * ffx_memxor(void * d,
-                  const void * s1, const void * s2,
-                  size_t len)
-{
-#define MEMXOR(TYPE, DST, S1, S2, BYTES)                        \
-    do {                                                        \
-        if ((((uintptr_t)(DST) |                                \
-              (uintptr_t)(S1) |                                 \
-              (uintptr_t)(S2)) & (sizeof(TYPE) - 1)) == 0) {    \
-            while (BYTES >= sizeof(TYPE)) {                     \
-                *(TYPE *)(DST) = *(TYPE *)(S1) ^ *(TYPE *)(S2); \
-                (DST) = (TYPE *)(DST) + 1;                      \
-                (S1) = (TYPE *)(S1) + 1;                        \
-                (S2) = (TYPE *)(S2) + 1;                        \
-                (BYTES) -= sizeof(TYPE);                        \
-            }                                                   \
-        }                                                       \
-    } while (0)
-
-    MEMXOR(uint64_t, d, s1, s2, len);
-    MEMXOR(uint8_t, d, s1, s2, len);
-
-    return d;
 }
 
 /*

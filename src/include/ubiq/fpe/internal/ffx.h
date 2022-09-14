@@ -33,14 +33,9 @@ char * ffx_revs(char * const dst, const char * const src)
 int ffx_str(char * const str, const size_t len,
             const unsigned int m, const unsigned int r, const bigint_t * n);
 
-void * ffx_memxor(void * d,
-                  const void * s1, const void * s2,
-                  size_t len);
-
 
 struct ffx_ctx
 {
-    const EVP_CIPHER * ciph;
     EVP_CIPHER_CTX * evp;
 
     unsigned int radix;
