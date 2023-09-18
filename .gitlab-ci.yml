@@ -1,21 +1,38 @@
-image:
-    name: debian:stable
 
 variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - build
 
 stages:
     - build
     - test
     - deploy
 
-build:
+build-centos-8-stream:
+    image: quay.io/centos/centos:stream8
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    stage: build
+    before_script:
+        - yum -y update
+        - yum install -y gcc gcc-c++ make gmp-c++ gmp-devel 
+        - yum install -y openssl-devel libcurl-devel file rpm-build cmake
+        - cd /tmp
+        - curl -LOJ http://mirror.centos.org/centos/8-stream/PowerTools/x86_64/os/Packages/libunistring-devel-0.9.9-3.el8.x86_64.rpm
+        - yum install -y ./libunistring*.rpm
+        - rm -f ./lib*.rpm
+        - cd -
+    script:
+        - cmake -S. -Bbuild
+        - cmake --build build --target all -- -j$(nproc)
+    cache:
+       key: "centos-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
+
+
+build-debian-11:
+    image: debian:bullseye
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     stage: build
@@ -27,11 +44,67 @@ build:
     script:
         - cmake -S. -Bbuild
         - cmake --build build --target all -- -j$(nproc)
+    cache:
+       key: "debian-11-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
 
-test:
+build-debian-12:
+    image: debian:bookworm
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    stage: build
+    before_script:
+        - apt -y update
+        - apt -y install cmake gcc g++
+        - apt -y install libcurl4-openssl-dev libssl-dev
+        - apt -y install dpkg-dev file libgmp-dev
+        - apt -y install libunistring-dev
+    script:
+        - cmake -S. -Bbuild
+        - cmake --build build --target all -- -j$(nproc)
+    cache:
+       key: "debian-12-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
+
+test-debian-11:
+    image: debian:bullseye
     stage: test
     before_script:
         - apt -y update
-        - apt -y install libgmp10 libssl1.1
+        - apt -y install libcurl4 libssl1.1
+        - apt -y install libgmp10
     script:
+        - ldd build/src/test/unittests
         - build/src/test/unittests
+    cache:
+       key: "debian-11-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
+
+test-debian-12:
+    image: debian:bookworm
+    stage: test
+    before_script:
+        - apt -y update
+        - apt -y install libcurl4 libssl3
+    script:
+        - ldd build/src/test/unittests
+        - build/src/test/unittests
+    cache:
+       key: "debian-12-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
+
+test-centos-8-stream:
+    image: quay.io/centos/centos:stream8
+    stage: test
+    script:
+        - ldd build/src/test/unittests
+        - build/src/test/unittests
+    cache:
+       key: "centos-${CI_COMMIT_REF_SLUG}"
+       paths:
+        - build
+
