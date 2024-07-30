@@ -8,8 +8,8 @@ stages:
     - test
     - deploy
 
-build-centos-8-stream:
-    image: quay.io/centos/centos:stream8
+build-centos-9-stream:
+    image: quay.io/centos/centos:stream9
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     stage: build
@@ -18,7 +18,7 @@ build-centos-8-stream:
         - yum install -y gcc gcc-c++ make gmp-c++ gmp-devel 
         - yum install -y openssl-devel libcurl-devel file rpm-build cmake
         - cd /tmp
-        - curl -LOJ http://mirror.centos.org/centos/8-stream/PowerTools/x86_64/os/Packages/libunistring-devel-0.9.9-3.el8.x86_64.rpm
+        - curl -LOJ https://mirror.stream.centos.org/9-stream/CRB/x86_64/os/Packages/libunistring-devel-0.9.10-15.el9.x86_64.rpm
         - yum install -y ./libunistring*.rpm
         - rm -f ./lib*.rpm
         - cd -
@@ -97,8 +97,8 @@ test-debian-12:
        paths:
         - build
 
-test-centos-8-stream:
-    image: quay.io/centos/centos:stream8
+test-centos-9-stream:
+    image: quay.io/centos/centos:stream9
     stage: test
     script:
         - ldd build/src/test/unittests
